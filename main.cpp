@@ -12,16 +12,24 @@ using namespace riscv_soc_tlm;
 
 int sc_main(int argc, char* argv[])
 {
-    std::string hexfile = "firmware.hex";
+    std::string filename = "firmware.hex";
     if (argc > 1)
     {
-        hexfile = argv[1];
+        filename = argv[1];
     }
 
-    std::cout << "Loading " << hexfile << std::endl;
+    std::cout << "Loading " << filename << std::endl;
 
     Memory memory("memory");
-    uint32_t start_pc = memory.loadHex(hexfile);
+    uint32_t start_pc;
+    if (filename.size() >= 4 && filename.substr(filename.size() - 4) == ".elf")
+    {
+        start_pc = memory.loadELF(filename);
+    }
+    else
+    {
+        start_pc = memory.loadHex(filename);
+    }
 
     Interconnect interconnect("interconnect");
 

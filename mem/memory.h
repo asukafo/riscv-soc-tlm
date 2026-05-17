@@ -21,6 +21,7 @@ public:
     Memory(sc_core::sc_module_name name);
 
     uint32_t loadHex(const std::string& filename);
+    uint32_t loadELF(const std::string& filename);
 
 private:
     void b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay);

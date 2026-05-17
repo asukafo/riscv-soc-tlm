@@ -55,4 +55,4 @@ test: $(TARGET)
 ctest: $(TARGET)
 	$(MAKE) -C tests/c_programs
 	@echo "=== C Demo ==="
-	./$(TARGET) tests/c_programs/test_demo.hex && echo "PASS"
+	./$(TARGET) tests/c_programs/test_demo.elf && echo "PASS"
