@@ -41,18 +41,18 @@ run: $(TARGET)
 
 test: $(TARGET)
 	@echo "=== Test 1: ALU ==="
-	./$(TARGET) tests/test_alu.hex && echo "PASS"
+	./$(TARGET) tests/hex_sanity/test_alu.hex && echo "PASS"
 	@echo ""
 	@echo "=== Test 2: Memory ==="
-	./$(TARGET) tests/test_mem.hex && echo "PASS"
+	./$(TARGET) tests/hex_sanity/test_mem.hex && echo "PASS"
 	@echo ""
 	@echo "=== Test 3: Loop ==="
-	./$(TARGET) tests/test_loop.hex && echo "PASS"
+	./$(TARGET) tests/hex_sanity/test_loop.hex && echo "PASS"
 	@echo ""
 	@echo "=== Test 4: Call ==="
-	./$(TARGET) tests/test_call.hex && echo "PASS"
+	./$(TARGET) tests/hex_sanity/test_call.hex && echo "PASS"
 
 ctest: $(TARGET)
-	$(MAKE) -C tests/c-programs
+	$(MAKE) -C tests/c_programs
 	@echo "=== C Demo ==="
-	./$(TARGET) tests/c-programs/test_demo.hex && echo "PASS"
+	./$(TARGET) tests/c_programs/test_demo.hex && echo "PASS"
