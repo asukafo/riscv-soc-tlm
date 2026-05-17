@@ -1,16 +1,15 @@
 #include <iostream>
 #include <string>
+
 #include "cpu/rv32-lt/cpu.h"
-#include "mem/memory.h"
 #include "interconnect/interconnect.h"
+#include "mem/memory.h"
 
 using namespace rv32;
 
-int sc_main(int argc, char* argv[])
-{
+int sc_main(int argc, char* argv[]) {
     std::string hexfile = "firmware.hex";
-    if (argc > 1)
-    {
+    if (argc > 1) {
         hexfile = argv[1];
     }
 

@@ -1,11 +1,12 @@
 #include "cpu/rv32-lt/memory_interface.h"
+
 #include <iostream>
 #include <sstream>
 
 namespace rv32 {
 
-MemoryInterface::MemoryInterface()
-    : socket("socket") {}
+MemoryInterface::MemoryInterface() : socket("socket") {
+}
 
 uint32_t MemoryInterface::readDataMem(uint64_t addr, int size) {
     uint32_t data = 0;
@@ -65,12 +66,11 @@ uint32_t MemoryInterface::fetchInstruction(uint32_t addr) {
     socket->b_transport(trans, delay);
 
     if (trans.is_response_error()) {
-        std::cerr << "Fetch error at PC=0x" << std::hex << addr
-                  << std::dec << std::endl;
+        std::cerr << "Fetch error at PC=0x" << std::hex << addr << std::dec << std::endl;
         sc_core::sc_stop();
     }
 
     return data;
 }
 
-} // namespace rv32
+}  // namespace rv32

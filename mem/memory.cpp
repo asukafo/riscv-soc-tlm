@@ -1,13 +1,13 @@
 #include "mem/memory.h"
+
+#include <cstring>
 #include <fstream>
 #include <iostream>
-#include <cstring>
 
 namespace rv32 {
 
 Memory::Memory(sc_core::sc_module_name name)
-    : sc_core::sc_module(name), socket("socket"), start_pc(0x80000000), base_addr(0x80000000)
-{
+    : sc_core::sc_module(name), socket("socket"), start_pc(0x80000000), base_addr(0x80000000) {
     socket.register_b_transport(this, &Memory::b_transport);
     std::memset(mem, 0, SIZE);
 }
@@ -20,8 +20,8 @@ void Memory::b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& dela
     delay = sc_core::SC_ZERO_TIME;
 
     if (offset + len > SIZE) {
-        std::cerr << "Memory access out of bounds: addr=0x" << std::hex << addr
-                  << " offset=0x" << offset << " len=" << std::dec << len << std::endl;
+        std::cerr << "Memory access out of bounds: addr=0x" << std::hex << addr << " offset=0x"
+                  << offset << " len=" << std::dec << len << std::endl;
         trans.set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
         return;
     }
@@ -44,9 +44,12 @@ void Memory::b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& dela
 }
 
 static uint8_t hexChar(uint8_t c) {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= '0' && c <= '9')
+        return c - '0';
+    if (c >= 'A' && c <= 'F')
+        return c - 'A' + 10;
+    if (c >= 'a' && c <= 'f')
+        return c - 'a' + 10;
     return 0;
 }
 
@@ -63,11 +66,12 @@ void Memory::loadHex(const std::string& filename) {
     bool first_data = true;
 
     while (std::getline(file, line)) {
-        if (line.empty() || line[0] != ':') continue;
+        if (line.empty() || line[0] != ':')
+            continue;
 
         size_t len = hexChar(line[1]) * 16 + hexChar(line[2]);
         uint32_t addr = (hexChar(line[3]) << 12) | (hexChar(line[4]) << 8) |
-                        (hexChar(line[5]) << 4)  | hexChar(line[6]);
+                        (hexChar(line[5]) << 4) | hexChar(line[6]);
         uint8_t type = hexChar(line[7]) * 16 + hexChar(line[8]);
 
         if (type == 0x00) {
@@ -109,4 +113,4 @@ void Memory::loadHex(const std::string& filename) {
               << ", entry PC=0x" << start_pc << std::dec << std::endl;
 }
 
-} // namespace rv32
+}  // namespace rv32

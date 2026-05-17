@@ -3,22 +3,79 @@
 
 #include <array>
 #include <cstdint>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 
 namespace rv32 {
 
 class Registers {
-public:
+   public:
     enum {
-        x0=0, x1=1, x2=2, x3=3, x4=4, x5=5, x6=6, x7=7,
-        x8=8, x9=9, x10=10, x11=11, x12=12, x13=13, x14=14, x15=15,
-        x16=16, x17=17, x18=18, x19=19, x20=20, x21=21, x22=22, x23=23,
-        x24=24, x25=25, x26=26, x27=27, x28=28, x29=29, x30=30, x31=31,
-        zero=x0, ra=x1, sp=x2, gp=x3, tp=x4, t0=x5, t1=x6, t2=x7,
-        s0=x8, fp=x8, s1=x9, a0=x10, a1=x11, a2=x12, a3=x13, a4=x14, a5=x15,
-        a6=x16, a7=x17, s2=x18, s3=x19, s4=x20, s5=x21, s6=x22, s7=x23,
-        s8=x24, s9=x25, s10=x26, s11=x27, t3=x28, t4=x29, t5=x30, t6=x31
+        x0 = 0,
+        x1 = 1,
+        x2 = 2,
+        x3 = 3,
+        x4 = 4,
+        x5 = 5,
+        x6 = 6,
+        x7 = 7,
+        x8 = 8,
+        x9 = 9,
+        x10 = 10,
+        x11 = 11,
+        x12 = 12,
+        x13 = 13,
+        x14 = 14,
+        x15 = 15,
+        x16 = 16,
+        x17 = 17,
+        x18 = 18,
+        x19 = 19,
+        x20 = 20,
+        x21 = 21,
+        x22 = 22,
+        x23 = 23,
+        x24 = 24,
+        x25 = 25,
+        x26 = 26,
+        x27 = 27,
+        x28 = 28,
+        x29 = 29,
+        x30 = 30,
+        x31 = 31,
+        zero = x0,
+        ra = x1,
+        sp = x2,
+        gp = x3,
+        tp = x4,
+        t0 = x5,
+        t1 = x6,
+        t2 = x7,
+        s0 = x8,
+        fp = x8,
+        s1 = x9,
+        a0 = x10,
+        a1 = x11,
+        a2 = x12,
+        a3 = x13,
+        a4 = x14,
+        a5 = x15,
+        a6 = x16,
+        a7 = x17,
+        s2 = x18,
+        s3 = x19,
+        s4 = x20,
+        s5 = x21,
+        s6 = x22,
+        s7 = x23,
+        s8 = x24,
+        s9 = x25,
+        s10 = x26,
+        s11 = x27,
+        t3 = x28,
+        t4 = x29,
+        t5 = x30,
+        t6 = x31
     };
 
     Registers() {
@@ -28,7 +85,8 @@ public:
     }
 
     uint32_t getValue(uint32_t reg_num) const {
-        if (reg_num < 32) return regs[reg_num];
+        if (reg_num < 32)
+            return regs[reg_num];
         return 0xFFFFFFFF;
     }
 
@@ -38,28 +96,35 @@ public:
         }
     }
 
-    uint32_t getPC() const { return pc; }
-    void setPC(uint32_t new_pc) { pc = new_pc; }
-    void incPC() { pc += 4; }
+    uint32_t getPC() const {
+        return pc;
+    }
+    void setPC(uint32_t new_pc) {
+        pc = new_pc;
+    }
+    void incPC() {
+        pc += 4;
+    }
 
     void dump() const {
         std::cout << "\n=== Register Dump ===" << std::endl;
         std::cout << "PC = 0x" << std::hex << pc << std::dec << std::endl;
         for (int i = 0; i < 32; i++) {
-            std::cout << "x" << std::dec << std::setw(2) << i
-                      << " = 0x" << std::hex << std::setw(8) << std::setfill('0')
-                      << regs[i] << std::setfill(' ') << std::dec;
-            if ((i + 1) % 4 == 0) std::cout << std::endl;
-            else std::cout << "  ";
+            std::cout << "x" << std::dec << std::setw(2) << i << " = 0x" << std::hex << std::setw(8)
+                      << std::setfill('0') << regs[i] << std::setfill(' ') << std::dec;
+            if ((i + 1) % 4 == 0)
+                std::cout << std::endl;
+            else
+                std::cout << "  ";
         }
         std::cout << std::endl;
     }
 
-private:
+   private:
     std::array<uint32_t, 32> regs;
     uint32_t pc;
 };
 
-} // namespace rv32
+}  // namespace rv32
 
 #endif

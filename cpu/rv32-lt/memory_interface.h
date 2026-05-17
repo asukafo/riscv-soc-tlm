@@ -2,13 +2,14 @@
 #define MEMORY_INTERFACE_H
 
 #include <cstdint>
+
 #include "tlm.h"
 #include "tlm_utils/simple_initiator_socket.h"
 
 namespace rv32 {
 
 class MemoryInterface {
-public:
+   public:
     tlm_utils::simple_initiator_socket<MemoryInterface> socket;
 
     MemoryInterface();
@@ -18,6 +19,6 @@ public:
     uint32_t fetchInstruction(uint32_t addr);
 };
 
-} // namespace rv32
+}  // namespace rv32
 
 #endif
