@@ -13,41 +13,91 @@ make clean        # remove build/ directory
 
 Requires SystemC 2.3.4 at `$HOME/opt/systemc-2.3.4`. Compiler: g++ with C++17. The binary accepts a single optional argument: path to an Intel HEX file.
 
+## Directory Structure
+
+```
+main.cpp                          top-level wiring (sc_main)
+cpu/rv32-lt/                      RV32 loosely-timed core
+  core.h/cpp                      CPU SC_MODULE, fetch loop
+  base_isa.h                      Instruction decode + Executor (pure callbacks)
+  registers.h                     x0-x31 + PC, SP init, dump()
+cache/                            configurable cache
+  cache.h/cpp                     write-through, LRU, hit/miss stats
+interconnect/                     N:M address router
+  interconnect.h/cpp              multi-passthrough target -> per-target initiators
+mem/                              main memory
+  memory.h/cpp                    8MB SRAM, simple_target_socket, HEX loader
+periph/dma/                       DMA controller
+  dma.h/cpp                       initiator (data) + target (MMIO registers)
+periph/display/                   display controller
+  display.h/cpp                   initiator (framebuffer read) + target (MMIO)
+tests/                            hand-written Intel HEX test programs
+```
+
 ## Architecture
 
-This is a **minimal RV32I loosely-timed (LT) instruction set simulator** built on **SystemC + TLM-2.0**. All code lives in the `riscv_soc_tlm` namespace.
+A **RISC-V RV32I loosely-timed (LT) SoC simulator** built on **SystemC + TLM-2.0**. All code in `riscv_soc_tlm` namespace. Uses `b_transport` (base protocol) throughout; AXI-specific info can be carried via `tlm_extension` without changing socket types.
 
-### Top-level wiring (`main.cpp`)
+### Data & Control Flow
 
-`sc_main` instantiates one `Memory`, one `Interconnect`, and one `CPU`. The CPU's unified `mem_if.socket` binds to the `Interconnect::target_socket`. The interconnect routes transactions by address: `[0x00000000, 8MB)` and `[0x80000000, 8MB)` both map to `Memory::socket`. The memory loads a HEX file via `loadHex()`, which returns the entry PC; that value is passed to the CPU constructor.
+```
+                DATA PATH                          CONTROL PATH
+CPU.instr_socket --> Cache --> Interconnect --> Memory
+CPU.data_socket  --> Cache --> Interconnect --> Memory
+                                         |--> DMA.target      (MMIO @ 0x10000000)
+                                         |--> Display.target  (MMIO @ 0x10001000)
+
+DMA.initiator     --> Interconnect --> Memory                 (data transfer)
+Display.initiator --> Interconnect --> Memory                 (framebuffer read)
+```
 
 ### CPU (`cpu/rv32-lt/`)
 
-- **`core.h/cpp`** — The `CPU` SC_MODULE. Runs a single `SC_THREAD` (`CPU_thread`) that loops forever: fetch instruction via `mem_if.fetchInstruction(pc)`, execute, increment PC (or let branch/jump override), then `wait(10, SC_NS)`.
-- **`base_isa.h`** — Two key classes:
-  - `Instruction` — Decodes the 32-bit raw instruction into opcode, funct3/7, rd/rs1/rs2, and immediate fields (I, S, B, U, J types per the RISC-V spec).
-  - `Executor` — Holds pointers to `Registers` and `MemoryInterface`. The `execute()` method dispatches via opcode switch to inline handler methods (LUI, JAL, BEQ, LW, SW, ADDI, ADD, ECALL, etc.). Returns `true` if PC was explicitly set (branch/jump), `false` otherwise.
-- **`registers.h`** — 32-entry register file (`x0`–`x31`), with ABI aliases (`zero`, `ra`, `sp`, `a0`, etc.). `x0` is hardwired to zero on writes. PC starts at `0x80000000`. `dump()` prints all regs + PC in hex.
-- **`memory_interface.h/cpp`** — Wraps a single `simple_initiator_socket` for all CPU memory access. Methods: `readDataMem(addr, size)` / `writeDataMem(addr, data, size)` for load/store, and `fetchInstruction(addr)` for instruction fetch — each issuing a TLM `b_transport`.
+- **`core.h/cpp`** — `CPU` SC_MODULE with `instr_socket` (I-fetch) and `data_socket` (load/store). Runs `SC_THREAD` (`CPU_thread`): fetch `->` execute `->` incPC/jump `->` `wait(10, SC_NS)`.
+- **`base_isa.h`** — `Instruction` decodes 32-bit raw instruction into opcode, funct3/7, rd/rs1/rs2, immediates. `Executor` uses function pointer callbacks (`mem_read`, `mem_write`, `reg_read`, `reg_write`, `get_pc`, `set_pc`, `inc_pc`, `dump`) — no direct dependency on Registers or any socket. CPU provides static callback methods.
+- **`registers.h`** — 32-entry register file with ABI documentation. `x0` hardwired to zero. PC starts at `0x80000000`, SP at `0x800000` (top of 8MB).
 
-### Memory (`mem/`)
+### Cache (`cache/`)
 
-- **`memory.h/cpp`** — 8MB byte-array memory, base address `0x80000000`. Provides a `simple_target_socket`. The `b_transport` callback handles READ/WRITE commands by indexing into the byte array. `loadHex()` parses Intel HEX format (record types 00/01/02/04) and returns the entry PC (address of the first data record).
+- Configurable via `CacheConfig { size, line_size, associativity }`. Write-through, write-allocate on read miss. LRU replacement per set. Hit/miss counters.
+- `multi_passthrough_target_socket` on CPU side (both instr and data bind here), `simple_initiator_socket` on bus side.
+- Unified topology (default): one Cache for I+D. Separated: two Cache instances for I-Cache + D-Cache (swap via commented block in `main.cpp`).
 
 ### Interconnect (`interconnect/`)
 
-- **`interconnect.h/cpp`** — Address-routing bus module. Provides a `multi_passthrough_target_socket` for all initiators (CPU, future DMA engines) and per-target `simple_initiator_socket` members (currently `mem_socket` for Memory). The `map(base, size, socket)` method registers address regions; `b_transport` iterates regions and forwards matching transactions. Unmatched addresses get `TLM_ADDRESS_ERROR_RESPONSE`.
+- `multi_passthrough_target_socket` — all initiators (Cache, DMA, Display) enter here.
+- Per-target `simple_initiator_socket` members: `mem_socket`, `dma_mmio_socket`, `display_mmio_socket`.
+- `b_transport` iterates `regions[]` vector, forwards to matching socket.
 
-### TLM-2.0 sockets
+### Memory (`mem/`)
 
-CPU connects to Interconnect via a single `MemoryInterface::socket`. The Interconnect routes to Memory via `mem_socket`. All communication uses `b_transport` (loosely-timed coding style), blocking transport with zero delay. Protocol strategy: base TLM-2.0 protocol types; future AXI-specific info (burst, cache, prot) will be carried via `tlm_extension` on the generic payload without changing socket types.
+- 8MB byte array. `simple_target_socket`. `loadHex()` parses Intel HEX (types 00/01/02/04) and returns entry PC. Byte-copy reads/writes, handles any `data_length`.
+
+### DMA (`periph/dma/`)
+
+- `target_socket` for MMIO: SRC_ADDR (0x00/0x04), DST_ADDR (0x08/0x0C), SIZE (0x10), CTRL (0x14, bit0=start).
+- `initiator_socket` for data movement. `SC_THREAD` polls CTRL, does word-by-word `b_transport` READ+WRITE transfer.
+
+### Display (`periph/display/`)
+
+- `target_socket` for MMIO: FB_ADDR (0x00/0x04), WIDTH (0x08), HEIGHT (0x0C), CTRL (0x10, bit0=enable).
+- `initiator_socket` for framebuffer read. `SC_THREAD` reads pixels, outputs ASCII (`#` or `.`) to stdout every 100us.
+
+### Address Map
+
+| Range | Size | Target |
+|---|---|---|
+| `0x00000000` | 8MB | Memory (low alias) |
+| `0x80000000` | 8MB | Memory |
+| `0x10000000` | 4KB | DMA MMIO |
+| `0x10001000` | 4KB | Display MMIO |
 
 ### Tests
 
 Four hand-written Intel HEX test programs in `tests/`:
-- `test_alu.hex` — ADDI, ADD, SRLI, XOR, then ECALL
-- `test_mem.hex` — SW, LW, then ECALL
-- `test_loop.hex` — ADDI, ADD, ADDI with BNE loop, then ECALL
-- `test_call.hex` — ADDI, JAL, JALR (ret), then ECALL
+- `test_alu.hex` — ADDI, ADD, SRLI, XOR, ECALL
+- `test_mem.hex` — SW, LW, ECALL
+- `test_loop.hex` — ADDI, ADD, ADDI, BNE loop, ECALL
+- `test_call.hex` — ADDI, JAL, JALR (ret), ECALL
 
-Each test ends with an ECALL instruction that triggers `sc_stop()` and a register dump. Tests pass if the simulator exits cleanly (return code 0).
+Each test ends with ECALL `->` `sc_stop()` `->` register dump. Tests pass if exit code is 0.
