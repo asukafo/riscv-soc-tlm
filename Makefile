@@ -14,7 +14,6 @@ BUILD_DIR = build
 SRCS  = main.cpp \
         cache/cache.cpp \
         cpu/rv32-lt/core.cpp \
-        cpu/rv32-lt/memory_interface.cpp \
         mem/memory.cpp \
         interconnect/interconnect.cpp
 

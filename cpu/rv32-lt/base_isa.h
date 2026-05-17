@@ -3,9 +3,7 @@
 
 #include <cstdint>
 #include <iostream>
-
-#include "cpu/rv32-lt/memory_interface.h"
-#include "cpu/rv32-lt/registers.h"
+#include "systemc"
 
 namespace riscv_soc_tlm
 {
@@ -95,15 +93,39 @@ private:
 class Executor
 {
 public:
-    Executor(Registers* r, MemoryInterface* m) : regs(r), mem_if(m)
+    using MemReadFn = uint32_t (*)(void*, uint64_t, int);
+    using MemWriteFn = void (*)(void*, uint64_t, uint32_t, int);
+    using RegReadFn = uint32_t (*)(void*, uint32_t);
+    using RegWriteFn = void (*)(void*, uint32_t, uint32_t);
+    using GetPCFn = uint32_t (*)(void*);
+    using SetPCFn = void (*)(void*, uint32_t);
+    using IncPCFn = void (*)(void*);
+    using DumpFn = void (*)(void*);
+
+    Executor()
+        : mem_read(nullptr), mem_write(nullptr), reg_read(nullptr), reg_write(nullptr),
+          get_pc(nullptr), set_pc(nullptr), inc_pc(nullptr), dump(nullptr), ctx(nullptr)
     {
     }
+
+    void setContext(void* c) { ctx = c; }
+    void setMem(MemReadFn r, MemWriteFn w) { mem_read = r; mem_write = w; }
+    void setReg(RegReadFn r, RegWriteFn w) { reg_read = r; reg_write = w; }
+    void setPC(GetPCFn g, SetPCFn s, IncPCFn i) { get_pc = g; set_pc = s; inc_pc = i; }
+    void setDump(DumpFn d) { dump = d; }
 
     bool execute(uint32_t instr_raw);
 
 private:
-    Registers* regs;
-    MemoryInterface* mem_if;
+    MemReadFn mem_read;
+    MemWriteFn mem_write;
+    RegReadFn reg_read;
+    RegWriteFn reg_write;
+    GetPCFn get_pc;
+    SetPCFn set_pc;
+    IncPCFn inc_pc;
+    DumpFn dump;
+    void* ctx;
 
     void LUI(const Instruction& i);
     void AUIPC(const Instruction& i);
@@ -156,28 +178,28 @@ private:
 
 inline void Executor::LUI(const Instruction& i)
 {
-    regs->setValue(i.rd(), i.imm_U());
+    reg_write(ctx, i.rd(), i.imm_U());
 }
 
 inline void Executor::AUIPC(const Instruction& i)
 {
-    regs->setValue(i.rd(), regs->getPC() + i.imm_U());
+    reg_write(ctx, i.rd(), get_pc(ctx) + i.imm_U());
 }
 
 inline bool Executor::JAL(const Instruction& i)
 {
-    uint32_t link = regs->getPC() + 4;
-    regs->setValue(i.rd(), link);
-    regs->setPC(regs->getPC() + i.imm_J());
+    uint32_t link = get_pc(ctx) + 4;
+    reg_write(ctx, i.rd(), link);
+    set_pc(ctx, get_pc(ctx) + i.imm_J());
     return true;
 }
 
 inline bool Executor::JALR(const Instruction& i)
 {
-    uint32_t link = regs->getPC() + 4;
-    uint32_t target = (regs->getValue(i.rs1()) + i.imm_I()) & ~1u;
-    regs->setValue(i.rd(), link);
-    regs->setPC(target);
+    uint32_t link = get_pc(ctx) + 4;
+    uint32_t target = (reg_read(ctx, i.rs1()) + i.imm_I()) & ~1u;
+    reg_write(ctx, i.rd(), link);
+    set_pc(ctx, target);
     return true;
 }
 
@@ -185,54 +207,54 @@ inline bool Executor::JALR(const Instruction& i)
 
 inline bool Executor::BEQ(const Instruction& i)
 {
-    if (regs->getValue(i.rs1()) == regs->getValue(i.rs2()))
+    if (reg_read(ctx, i.rs1()) == reg_read(ctx, i.rs2()))
     {
-        regs->setPC(regs->getPC() + i.imm_B());
+        set_pc(ctx, get_pc(ctx) + i.imm_B());
         return true;
     }
     return false;
 }
 inline bool Executor::BNE(const Instruction& i)
 {
-    if (regs->getValue(i.rs1()) != regs->getValue(i.rs2()))
+    if (reg_read(ctx, i.rs1()) != reg_read(ctx, i.rs2()))
     {
-        regs->setPC(regs->getPC() + i.imm_B());
+        set_pc(ctx, get_pc(ctx) + i.imm_B());
         return true;
     }
     return false;
 }
 inline bool Executor::BLT(const Instruction& i)
 {
-    if ((int32_t)regs->getValue(i.rs1()) < (int32_t)regs->getValue(i.rs2()))
+    if ((int32_t)reg_read(ctx, i.rs1()) < (int32_t)reg_read(ctx, i.rs2()))
     {
-        regs->setPC(regs->getPC() + i.imm_B());
+        set_pc(ctx, get_pc(ctx) + i.imm_B());
         return true;
     }
     return false;
 }
 inline bool Executor::BGE(const Instruction& i)
 {
-    if ((int32_t)regs->getValue(i.rs1()) >= (int32_t)regs->getValue(i.rs2()))
+    if ((int32_t)reg_read(ctx, i.rs1()) >= (int32_t)reg_read(ctx, i.rs2()))
     {
-        regs->setPC(regs->getPC() + i.imm_B());
+        set_pc(ctx, get_pc(ctx) + i.imm_B());
         return true;
     }
     return false;
 }
 inline bool Executor::BLTU(const Instruction& i)
 {
-    if (regs->getValue(i.rs1()) < regs->getValue(i.rs2()))
+    if (reg_read(ctx, i.rs1()) < reg_read(ctx, i.rs2()))
     {
-        regs->setPC(regs->getPC() + i.imm_B());
+        set_pc(ctx, get_pc(ctx) + i.imm_B());
         return true;
     }
     return false;
 }
 inline bool Executor::BGEU(const Instruction& i)
 {
-    if (regs->getValue(i.rs1()) >= regs->getValue(i.rs2()))
+    if (reg_read(ctx, i.rs1()) >= reg_read(ctx, i.rs2()))
     {
-        regs->setPC(regs->getPC() + i.imm_B());
+        set_pc(ctx, get_pc(ctx) + i.imm_B());
         return true;
     }
     return false;
@@ -242,134 +264,134 @@ inline bool Executor::BGEU(const Instruction& i)
 
 inline void Executor::LB(const Instruction& i)
 {
-    uint64_t addr = regs->getValue(i.rs1()) + i.imm_I();
-    int8_t val = (int8_t)mem_if->readDataMem(addr, 1);
-    regs->setValue(i.rd(), (int32_t)val);
+    uint64_t addr = reg_read(ctx, i.rs1()) + i.imm_I();
+    int8_t val = (int8_t)mem_read(ctx, addr, 1);
+    reg_write(ctx, i.rd(), (int32_t)val);
 }
 inline void Executor::LH(const Instruction& i)
 {
-    uint64_t addr = regs->getValue(i.rs1()) + i.imm_I();
-    int16_t val = (int16_t)mem_if->readDataMem(addr, 2);
-    regs->setValue(i.rd(), (int32_t)val);
+    uint64_t addr = reg_read(ctx, i.rs1()) + i.imm_I();
+    int16_t val = (int16_t)mem_read(ctx, addr, 2);
+    reg_write(ctx, i.rd(), (int32_t)val);
 }
 inline void Executor::LW(const Instruction& i)
 {
-    uint64_t addr = regs->getValue(i.rs1()) + i.imm_I();
-    uint32_t val = mem_if->readDataMem(addr, 4);
-    regs->setValue(i.rd(), val);
+    uint64_t addr = reg_read(ctx, i.rs1()) + i.imm_I();
+    uint32_t val = mem_read(ctx, addr, 4);
+    reg_write(ctx, i.rd(), val);
 }
 inline void Executor::LBU(const Instruction& i)
 {
-    uint64_t addr = regs->getValue(i.rs1()) + i.imm_I();
-    uint8_t val = (uint8_t)mem_if->readDataMem(addr, 1);
-    regs->setValue(i.rd(), (uint32_t)val);
+    uint64_t addr = reg_read(ctx, i.rs1()) + i.imm_I();
+    uint8_t val = (uint8_t)mem_read(ctx, addr, 1);
+    reg_write(ctx, i.rd(), (uint32_t)val);
 }
 inline void Executor::LHU(const Instruction& i)
 {
-    uint64_t addr = regs->getValue(i.rs1()) + i.imm_I();
-    uint16_t val = (uint16_t)mem_if->readDataMem(addr, 2);
-    regs->setValue(i.rd(), (uint32_t)val);
+    uint64_t addr = reg_read(ctx, i.rs1()) + i.imm_I();
+    uint16_t val = (uint16_t)mem_read(ctx, addr, 2);
+    reg_write(ctx, i.rd(), (uint32_t)val);
 }
 
 // ─── Store instructions ───────────────────────────────────────────────
 
 inline void Executor::SB(const Instruction& i)
 {
-    uint64_t addr = regs->getValue(i.rs1()) + i.imm_S();
-    mem_if->writeDataMem(addr, regs->getValue(i.rs2()), 1);
+    uint64_t addr = reg_read(ctx, i.rs1()) + i.imm_S();
+    mem_write(ctx, addr, reg_read(ctx, i.rs2()), 1);
 }
 inline void Executor::SH(const Instruction& i)
 {
-    uint64_t addr = regs->getValue(i.rs1()) + i.imm_S();
-    mem_if->writeDataMem(addr, regs->getValue(i.rs2()), 2);
+    uint64_t addr = reg_read(ctx, i.rs1()) + i.imm_S();
+    mem_write(ctx, addr, reg_read(ctx, i.rs2()), 2);
 }
 inline void Executor::SW(const Instruction& i)
 {
-    uint64_t addr = regs->getValue(i.rs1()) + i.imm_S();
-    mem_if->writeDataMem(addr, regs->getValue(i.rs2()), 4);
+    uint64_t addr = reg_read(ctx, i.rs1()) + i.imm_S();
+    mem_write(ctx, addr, reg_read(ctx, i.rs2()), 4);
 }
 
 // ─── ALU immediate ────────────────────────────────────────────────────
 
 inline void Executor::ADDI(const Instruction& i)
 {
-    regs->setValue(i.rd(), regs->getValue(i.rs1()) + i.imm_I());
+    reg_write(ctx, i.rd(), reg_read(ctx, i.rs1()) + i.imm_I());
 }
 inline void Executor::SLTI(const Instruction& i)
 {
-    regs->setValue(i.rd(), ((int32_t)regs->getValue(i.rs1()) < i.imm_I()) ? 1 : 0);
+    reg_write(ctx, i.rd(), ((int32_t)reg_read(ctx, i.rs1()) < i.imm_I()) ? 1 : 0);
 }
 inline void Executor::SLTIU(const Instruction& i)
 {
-    regs->setValue(i.rd(), (regs->getValue(i.rs1()) < (uint32_t)i.imm_I()) ? 1 : 0);
+    reg_write(ctx, i.rd(), (reg_read(ctx, i.rs1()) < (uint32_t)i.imm_I()) ? 1 : 0);
 }
 inline void Executor::XORI(const Instruction& i)
 {
-    regs->setValue(i.rd(), regs->getValue(i.rs1()) ^ i.imm_I());
+    reg_write(ctx, i.rd(), reg_read(ctx, i.rs1()) ^ i.imm_I());
 }
 inline void Executor::ORI(const Instruction& i)
 {
-    regs->setValue(i.rd(), regs->getValue(i.rs1()) | i.imm_I());
+    reg_write(ctx, i.rd(), reg_read(ctx, i.rs1()) | i.imm_I());
 }
 inline void Executor::ANDI(const Instruction& i)
 {
-    regs->setValue(i.rd(), regs->getValue(i.rs1()) & i.imm_I());
+    reg_write(ctx, i.rd(), reg_read(ctx, i.rs1()) & i.imm_I());
 }
 inline void Executor::SLLI(const Instruction& i)
 {
-    regs->setValue(i.rd(), regs->getValue(i.rs1()) << i.shamt());
+    reg_write(ctx, i.rd(), reg_read(ctx, i.rs1()) << i.shamt());
 }
 inline void Executor::SRLI(const Instruction& i)
 {
-    regs->setValue(i.rd(), regs->getValue(i.rs1()) >> i.shamt());
+    reg_write(ctx, i.rd(), reg_read(ctx, i.rs1()) >> i.shamt());
 }
 inline void Executor::SRAI(const Instruction& i)
 {
-    regs->setValue(i.rd(), (int32_t)regs->getValue(i.rs1()) >> i.shamt());
+    reg_write(ctx, i.rd(), (int32_t)reg_read(ctx, i.rs1()) >> i.shamt());
 }
 
 // ─── ALU register-register ────────────────────────────────────────────
 
 inline void Executor::ADD(const Instruction& i)
 {
-    regs->setValue(i.rd(), regs->getValue(i.rs1()) + regs->getValue(i.rs2()));
+    reg_write(ctx, i.rd(), reg_read(ctx, i.rs1()) + reg_read(ctx, i.rs2()));
 }
 inline void Executor::SUB(const Instruction& i)
 {
-    regs->setValue(i.rd(), regs->getValue(i.rs1()) - regs->getValue(i.rs2()));
+    reg_write(ctx, i.rd(), reg_read(ctx, i.rs1()) - reg_read(ctx, i.rs2()));
 }
 inline void Executor::SLL(const Instruction& i)
 {
-    regs->setValue(i.rd(), regs->getValue(i.rs1()) << (regs->getValue(i.rs2()) & 0x1F));
+    reg_write(ctx, i.rd(), reg_read(ctx, i.rs1()) << (reg_read(ctx, i.rs2()) & 0x1F));
 }
 inline void Executor::SLT(const Instruction& i)
 {
-    regs->setValue(i.rd(),
-                   ((int32_t)regs->getValue(i.rs1()) < (int32_t)regs->getValue(i.rs2())) ? 1 : 0);
+    reg_write(ctx, i.rd(),
+                   ((int32_t)reg_read(ctx, i.rs1()) < (int32_t)reg_read(ctx, i.rs2())) ? 1 : 0);
 }
 inline void Executor::SLTU(const Instruction& i)
 {
-    regs->setValue(i.rd(), (regs->getValue(i.rs1()) < regs->getValue(i.rs2())) ? 1 : 0);
+    reg_write(ctx, i.rd(), (reg_read(ctx, i.rs1()) < reg_read(ctx, i.rs2())) ? 1 : 0);
 }
 inline void Executor::XOR(const Instruction& i)
 {
-    regs->setValue(i.rd(), regs->getValue(i.rs1()) ^ regs->getValue(i.rs2()));
+    reg_write(ctx, i.rd(), reg_read(ctx, i.rs1()) ^ reg_read(ctx, i.rs2()));
 }
 inline void Executor::SRL(const Instruction& i)
 {
-    regs->setValue(i.rd(), regs->getValue(i.rs1()) >> (regs->getValue(i.rs2()) & 0x1F));
+    reg_write(ctx, i.rd(), reg_read(ctx, i.rs1()) >> (reg_read(ctx, i.rs2()) & 0x1F));
 }
 inline void Executor::SRA(const Instruction& i)
 {
-    regs->setValue(i.rd(), (int32_t)regs->getValue(i.rs1()) >> (regs->getValue(i.rs2()) & 0x1F));
+    reg_write(ctx, i.rd(), (int32_t)reg_read(ctx, i.rs1()) >> (reg_read(ctx, i.rs2()) & 0x1F));
 }
 inline void Executor::OR(const Instruction& i)
 {
-    regs->setValue(i.rd(), regs->getValue(i.rs1()) | regs->getValue(i.rs2()));
+    reg_write(ctx, i.rd(), reg_read(ctx, i.rs1()) | reg_read(ctx, i.rs2()));
 }
 inline void Executor::AND(const Instruction& i)
 {
-    regs->setValue(i.rd(), regs->getValue(i.rs1()) & regs->getValue(i.rs2()));
+    reg_write(ctx, i.rd(), reg_read(ctx, i.rs1()) & reg_read(ctx, i.rs2()));
 }
 
 // ─── System ───────────────────────────────────────────────────────────
@@ -382,7 +404,7 @@ inline void Executor::FENCE(const Instruction& /*i*/)
 inline bool Executor::ECALL(const Instruction& /*i*/)
 {
     std::cout << "\n=== ECALL: simulation stopped ===" << std::endl;
-    regs->dump();
+    dump(ctx);
     sc_core::sc_stop();
     return false;
 }
@@ -557,7 +579,7 @@ inline bool Executor::execute(uint32_t instr_raw)
             break;
     }
 
-    std::cerr << "Illegal instruction: 0x" << std::hex << instr_raw << " @ PC=0x" << regs->getPC()
+    std::cerr << "Illegal instruction: 0x" << std::hex << instr_raw << " @ PC=0x" << get_pc(ctx)
               << std::dec << std::endl;
     return false;
 }

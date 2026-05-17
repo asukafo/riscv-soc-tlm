@@ -35,7 +35,7 @@ int sc_main(int argc, char* argv[])
     Cache unified_cache("unified_cache", cache_cfg);
 
     cpu.instr_socket.bind(unified_cache.target_socket);
-    cpu.mem_if.socket.bind(unified_cache.target_socket);
+    cpu.data_socket.bind(unified_cache.target_socket);
     unified_cache.initiator_socket.bind(interconnect.target_socket);
 
     // ── Topology 2: Separated I-Cache + D-Cache ───────────────────────
@@ -45,7 +45,7 @@ int sc_main(int argc, char* argv[])
     // Cache dcache("dcache", cache_cfg);
     //
     // cpu.instr_socket.bind(icache.target_socket);
-    // cpu.mem_if.socket.bind(dcache.target_socket);
+    // cpu.data_socket.bind(dcache.target_socket);
     // icache.initiator_socket.bind(interconnect.target_socket);
     // dcache.initiator_socket.bind(interconnect.target_socket);
 
