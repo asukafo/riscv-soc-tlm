@@ -5,6 +5,8 @@
 #include "cpu/rv32-lt/core.h"
 #include "interconnect/interconnect.h"
 #include "mem/memory.h"
+#include "periph/dma/dma.h"
+#include "periph/display/display.h"
 
 using namespace riscv_soc_tlm;
 
@@ -37,6 +39,15 @@ int sc_main(int argc, char* argv[])
     cpu.instr_socket.bind(unified_cache.target_socket);
     cpu.data_socket.bind(unified_cache.target_socket);
     unified_cache.initiator_socket.bind(interconnect.target_socket);
+
+    // ── DMA ────────────────────────────────────────────────────────────
+    DMA dma("dma");
+    dma.initiator_socket.bind(interconnect.target_socket);
+
+    // ── Display ────────────────────────────────────────────────────────
+    // 16x16 framebuffer at 0x1000
+    Display display("display", 0x1000, 16, 16);
+    display.initiator_socket.bind(interconnect.target_socket);
 
     // ── Topology 2: Separated I-Cache + D-Cache ───────────────────────
     // Comment out Topology 1 and uncomment this block to switch:

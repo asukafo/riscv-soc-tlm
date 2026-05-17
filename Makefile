@@ -15,7 +15,9 @@ SRCS  = main.cpp \
         cache/cache.cpp \
         cpu/rv32-lt/core.cpp \
         mem/memory.cpp \
-        interconnect/interconnect.cpp
+        interconnect/interconnect.cpp \
+        periph/dma/dma.cpp \
+        periph/display/display.cpp
 
 OBJS  = $(SRCS:%.cpp=$(BUILD_DIR)/%.o)
 TARGET = $(BUILD_DIR)/my_rv32
