@@ -6,6 +6,24 @@
 #include <iomanip>
 #include <iostream>
 
+// RISC-V RV32I register file (32 x 32-bit, x0 hardwired to zero).
+//
+// Register  ABI Name  Description
+// x0        zero      Hardwired zero
+// x1        ra        Return address
+// x2        sp        Stack pointer
+// x3        gp        Global pointer
+// x4        tp        Thread pointer
+// x5-x7     t0-t2     Temporaries (caller-saved)
+// x8        s0/fp     Saved register / Frame pointer
+// x9        s1        Saved register
+// x10-x11   a0-a1     Function arguments / return values
+// x12-x17   a2-a7     Function arguments
+// x18-x27   s2-s11    Saved registers (callee-saved)
+// x28-x31   t3-t6     Temporaries (caller-saved)
+//
+// PC starts at 0x80000000, SP starts at top of 8MB memory (0x800000).
+
 namespace riscv_soc_tlm
 {
 
