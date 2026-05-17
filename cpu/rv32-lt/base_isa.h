@@ -4,8 +4,8 @@
 #include <cstdint>
 #include <iostream>
 
-#include "cpu/rv32i/memory_interface.h"
-#include "cpu/rv32i/registers.h"
+#include "cpu/rv32-lt/memory_interface.h"
+#include "cpu/rv32-lt/registers.h"
 
 namespace riscv_soc_tlm
 {
