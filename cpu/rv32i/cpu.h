@@ -3,9 +3,9 @@
 
 #include <cstdint>
 
-#include "cpu/rv32-lt/base_isa.h"
-#include "cpu/rv32-lt/memory_interface.h"
-#include "cpu/rv32-lt/registers.h"
+#include "cpu/rv32i/base_isa.h"
+#include "cpu/rv32i/memory_interface.h"
+#include "cpu/rv32i/registers.h"
 #include "systemc"
 #include "tlm.h"
 #include "tlm_utils/simple_initiator_socket.h"

@@ -21,7 +21,7 @@ This is a **minimal RV32I loosely-timed (LT) instruction set simulator** built o
 
 `sc_main` instantiates one `Memory`, one `Interconnect`, and one `CPU`. The CPU's unified `mem_if.socket` binds to the `Interconnect::target_socket`. The interconnect routes transactions by address: `[0x00000000, 8MB)` and `[0x80000000, 8MB)` both map to `Memory::socket`. The memory loads a HEX file via `loadHex()`, which returns the entry PC; that value is passed to the CPU constructor.
 
-### CPU (`cpu/rv32-lt/`)
+### CPU (`cpu/rv32i/`)
 
 - **`cpu.h/cpp`** — The `CPU` SC_MODULE. Runs a single `SC_THREAD` (`CPU_thread`) that loops forever: fetch instruction via `mem_if.fetchInstruction(pc)`, execute, increment PC (or let branch/jump override), then `wait(10, SC_NS)`.
 - **`base_isa.h`** — Two key classes:
