@@ -32,20 +32,16 @@ void Memory::b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& dela
 
     if (trans.get_command() == tlm::TLM_READ_COMMAND)
     {
-        uint32_t val = 0;
         for (uint32_t i = 0; i < len; i++)
         {
-            val |= static_cast<uint32_t>(mem[offset + i]) << (8 * i);
+            ptr[i] = mem[offset + i];
         }
-        std::memcpy(ptr, &val, len);
     }
     else if (trans.get_command() == tlm::TLM_WRITE_COMMAND)
     {
-        uint32_t val = 0;
-        std::memcpy(&val, ptr, len);
         for (uint32_t i = 0; i < len; i++)
         {
-            mem[offset + i] = static_cast<uint8_t>((val >> (8 * i)) & 0xFF);
+            mem[offset + i] = ptr[i];
         }
     }
 

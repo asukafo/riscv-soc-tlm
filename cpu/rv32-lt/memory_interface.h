@@ -18,7 +18,6 @@ public:
 
     uint32_t readDataMem(uint64_t addr, int size);
     void writeDataMem(uint64_t addr, uint32_t data, int size);
-    uint32_t fetchInstruction(uint32_t addr);
 };
 
 }  // namespace riscv_soc_tlm
