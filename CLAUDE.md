@@ -15,11 +15,11 @@ Requires SystemC 2.3.4 at `$HOME/opt/systemc-2.3.4`. Compiler: g++ with C++17. T
 
 ## Architecture
 
-This is a **minimal RV32I loosely-timed (LT) instruction set simulator** built on **SystemC + TLM-2.0**. All code lives in the `rv32` namespace.
+This is a **minimal RV32I loosely-timed (LT) instruction set simulator** built on **SystemC + TLM-2.0**. All code lives in the `riscv_soc_tlm` namespace.
 
 ### Top-level wiring (`main.cpp`)
 
-`sc_main` instantiates one `Memory`, one `Interconnect`, and one `CPU`. The CPU's unified `mem_if.socket` binds to the `Interconnect::target_socket`. The interconnect routes transactions by address: `[0x00000000, 8MB)` and `[0x80000000, 8MB)` both map to `Memory::socket`. The memory loads a HEX file; its `start_pc` is passed to the CPU.
+`sc_main` instantiates one `Memory`, one `Interconnect`, and one `CPU`. The CPU's unified `mem_if.socket` binds to the `Interconnect::target_socket`. The interconnect routes transactions by address: `[0x00000000, 8MB)` and `[0x80000000, 8MB)` both map to `Memory::socket`. The memory loads a HEX file via `loadHex()`, which returns the entry PC; that value is passed to the CPU constructor.
 
 ### CPU (`cpu/rv32-lt/`)
 
@@ -32,7 +32,7 @@ This is a **minimal RV32I loosely-timed (LT) instruction set simulator** built o
 
 ### Memory (`mem/`)
 
-- **`memory.h/cpp`** — 8MB byte-array memory, base address `0x80000000`. Provides a `simple_target_socket`. The `b_transport` callback handles READ/WRITE commands by indexing into the byte array. `loadHex()` parses Intel HEX format (record types 00/01/02/04) and sets `start_pc` to the first data record's address.
+- **`memory.h/cpp`** — 8MB byte-array memory, base address `0x80000000`. Provides a `simple_target_socket`. The `b_transport` callback handles READ/WRITE commands by indexing into the byte array. `loadHex()` parses Intel HEX format (record types 00/01/02/04) and returns the entry PC (address of the first data record).
 
 ### Interconnect (`interconnect/`)
 
