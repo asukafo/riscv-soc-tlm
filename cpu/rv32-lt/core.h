@@ -1,5 +1,5 @@
-#ifndef CPU_H
-#define CPU_H
+#ifndef __CPU_H__
+#define __CPU_H__
 
 #include <cstdint>
 

@@ -23,7 +23,7 @@ This is a **minimal RV32I loosely-timed (LT) instruction set simulator** built o
 
 ### CPU (`cpu/rv32-lt/`)
 
-- **`cpu.h/cpp`** — The `CPU` SC_MODULE. Runs a single `SC_THREAD` (`CPU_thread`) that loops forever: fetch instruction via `mem_if.fetchInstruction(pc)`, execute, increment PC (or let branch/jump override), then `wait(10, SC_NS)`.
+- **`core.h/cpp`** — The `CPU` SC_MODULE. Runs a single `SC_THREAD` (`CPU_thread`) that loops forever: fetch instruction via `mem_if.fetchInstruction(pc)`, execute, increment PC (or let branch/jump override), then `wait(10, SC_NS)`.
 - **`base_isa.h`** — Two key classes:
   - `Instruction` — Decodes the 32-bit raw instruction into opcode, funct3/7, rd/rs1/rs2, and immediate fields (I, S, B, U, J types per the RISC-V spec).
   - `Executor` — Holds pointers to `Registers` and `MemoryInterface`. The `execute()` method dispatches via opcode switch to inline handler methods (LUI, JAL, BEQ, LW, SW, ADDI, ADD, ECALL, etc.). Returns `true` if PC was explicitly set (branch/jump), `false` otherwise.

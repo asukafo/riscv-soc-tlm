@@ -1,5 +1,5 @@
-#ifndef BASE_ISA_H
-#define BASE_ISA_H
+#ifndef __BASE_ISA_H__
+#define __BASE_ISA_H__
 
 #include <cstdint>
 #include <iostream>

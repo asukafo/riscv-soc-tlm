@@ -1,5 +1,5 @@
-#ifndef MEMORY_INTERFACE_H
-#define MEMORY_INTERFACE_H
+#ifndef __MEMORY_INTERFACE_H__
+#define __MEMORY_INTERFACE_H__
 
 #include <cstdint>
 

@@ -1,5 +1,5 @@
-#ifndef REGISTERS_H
-#define REGISTERS_H
+#ifndef __REGISTERS_H__
+#define __REGISTERS_H__
 
 #include <array>
 #include <cstdint>

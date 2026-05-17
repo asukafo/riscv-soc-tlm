@@ -1,5 +1,5 @@
-#ifndef INTERCONNECT_H
-#define INTERCONNECT_H
+#ifndef __INTERCONNECT_H__
+#define __INTERCONNECT_H__
 
 #include <cstdint>
 #include <vector>

@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 
-#include "cpu/rv32-lt/cpu.h"
+#include "cpu/rv32-lt/core.h"
 #include "interconnect/interconnect.h"
 #include "mem/memory.h"
 

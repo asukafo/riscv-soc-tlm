@@ -12,7 +12,7 @@ LIBS     = -lsystemc -lpthread
 BUILD_DIR = build
 
 SRCS  = main.cpp \
-        cpu/rv32-lt/cpu.cpp \
+        cpu/rv32-lt/core.cpp \
         cpu/rv32-lt/memory_interface.cpp \
         mem/memory.cpp \
         interconnect/interconnect.cpp
