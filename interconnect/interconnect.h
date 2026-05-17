@@ -14,7 +14,7 @@ namespace rv32
 
 class Interconnect : public sc_core::sc_module
 {
-   public:
+public:
     tlm_utils::multi_passthrough_target_socket<Interconnect> target_socket;
     tlm_utils::simple_initiator_socket<Interconnect> mem_socket;
 
@@ -23,7 +23,7 @@ class Interconnect : public sc_core::sc_module
     void map(uint64_t base, uint64_t size,
              tlm_utils::simple_initiator_socket<Interconnect>& socket);
 
-   private:
+private:
     struct AddressRegion
     {
         uint64_t base;

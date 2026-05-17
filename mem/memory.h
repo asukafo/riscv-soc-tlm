@@ -13,7 +13,7 @@ namespace rv32
 
 class Memory : public sc_core::sc_module
 {
-   public:
+public:
     static constexpr uint32_t SIZE = 8 * 1024 * 1024;  // 8MB
 
     tlm_utils::simple_target_socket<Memory> socket;
@@ -26,7 +26,7 @@ class Memory : public sc_core::sc_module
         return start_pc;
     }
 
-   private:
+private:
     void b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay);
 
     uint32_t toOffset(uint64_t addr) const

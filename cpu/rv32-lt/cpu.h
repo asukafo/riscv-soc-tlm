@@ -15,13 +15,13 @@ namespace rv32
 
 class CPU : public sc_core::sc_module
 {
-   public:
+public:
     Registers regs;
     MemoryInterface mem_if;
 
     CPU(sc_core::sc_module_name name, uint32_t start_pc);
 
-   private:
+private:
     Executor executor;
 
     void CPU_thread();

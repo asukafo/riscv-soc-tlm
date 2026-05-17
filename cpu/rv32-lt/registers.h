@@ -11,7 +11,7 @@ namespace rv32
 
 class Registers
 {
-   public:
+public:
     enum
     {
         x0 = 0,
@@ -132,7 +132,7 @@ class Registers
         std::cout << std::endl;
     }
 
-   private:
+private:
     std::array<uint32_t, 32> regs;
     uint32_t pc;
 };

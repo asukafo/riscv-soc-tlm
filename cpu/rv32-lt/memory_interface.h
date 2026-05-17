@@ -11,7 +11,7 @@ namespace rv32
 
 class MemoryInterface
 {
-   public:
+public:
     tlm_utils::simple_initiator_socket<MemoryInterface> socket;
 
     MemoryInterface();

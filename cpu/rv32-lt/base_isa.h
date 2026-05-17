@@ -12,7 +12,7 @@ namespace rv32
 
 class Instruction
 {
-   public:
+public:
     Instruction(uint32_t instr) : m_instr(instr)
     {
     }
@@ -88,20 +88,20 @@ class Instruction
         return (m_instr >> 20) & 0x1F;
     }
 
-   private:
+private:
     uint32_t m_instr;
 };
 
 class Executor
 {
-   public:
+public:
     Executor(Registers* r, MemoryInterface* m) : regs(r), mem_if(m)
     {
     }
 
     bool execute(uint32_t instr_raw);
 
-   private:
+private:
     Registers* regs;
     MemoryInterface* mem_if;
 
