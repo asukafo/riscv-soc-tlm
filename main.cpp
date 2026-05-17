@@ -18,11 +18,11 @@ int sc_main(int argc, char* argv[])
     std::cout << "Loading " << hexfile << std::endl;
 
     Memory memory("memory");
-    memory.loadHex(hexfile);
+    uint32_t start_pc = memory.loadHex(hexfile);
 
     Interconnect interconnect("interconnect");
 
-    CPU cpu("cpu", memory.getStartPC());
+    CPU cpu("cpu", start_pc);
 
     cpu.mem_if.socket.bind(interconnect.target_socket);
 

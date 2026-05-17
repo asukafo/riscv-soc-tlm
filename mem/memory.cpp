@@ -8,7 +8,7 @@ namespace riscv_soc_tlm
 {
 
 Memory::Memory(sc_core::sc_module_name name)
-    : sc_core::sc_module(name), socket("socket"), start_pc(0x80000000), base_addr(0x80000000)
+    : sc_core::sc_module(name), socket("socket"), base_addr(0x80000000)
 {
     socket.register_b_transport(this, &Memory::b_transport);
     std::memset(mem, 0, SIZE);
@@ -63,18 +63,19 @@ static uint8_t hexChar(uint8_t c)
     return 0;
 }
 
-void Memory::loadHex(const std::string& filename)
+uint32_t Memory::loadHex(const std::string& filename)
 {
     std::ifstream file(filename);
     if (!file.is_open())
     {
         std::cerr << "Cannot open HEX file: " << filename << std::endl;
-        return;
+        return 0x80000000;
     }
 
     std::string line;
     uint32_t ext_addr = 0;
     uint32_t first_addr = 0;
+    uint32_t start_pc = 0x80000000;
     bool first_data = true;
 
     while (std::getline(file, line))
@@ -136,6 +137,8 @@ void Memory::loadHex(const std::string& filename)
 
     std::cout << "HEX loaded: " << filename << ", base=0x" << std::hex << base_addr
               << ", entry PC=0x" << start_pc << std::dec << std::endl;
+
+    return start_pc;
 }
 
 }  // namespace riscv_soc_tlm

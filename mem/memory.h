@@ -20,11 +20,7 @@ public:
 
     Memory(sc_core::sc_module_name name);
 
-    void loadHex(const std::string& filename);
-    uint32_t getStartPC() const
-    {
-        return start_pc;
-    }
+    uint32_t loadHex(const std::string& filename);
 
 private:
     void b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay);
@@ -40,7 +36,6 @@ private:
     }
 
     uint8_t mem[SIZE];
-    uint32_t start_pc;
     uint64_t base_addr;
 };
 
