@@ -9,14 +9,16 @@ INCLUDES = -I$(SYSTEMC_INC) -I.
 LDFLAGS  = -L$(SYSTEMC_LIB) -Wl,-rpath,$(SYSTEMC_LIB) -Wl,-stack_size,0x2000000
 LIBS     = -lsystemc -lpthread
 
+BUILD_DIR = build
+
 SRCS  = main.cpp \
         cpu/rv32-lt/cpu.cpp \
         cpu/rv32-lt/memory_interface.cpp \
         mem/memory.cpp \
         interconnect/interconnect.cpp
 
-OBJS  = $(SRCS:.cpp=.o)
-TARGET = my_rv32
+OBJS  = $(SRCS:%.cpp=$(BUILD_DIR)/%.o)
+TARGET = $(BUILD_DIR)/my_rv32
 
 .PHONY: all clean run test
 
@@ -25,11 +27,12 @@ all: $(TARGET)
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
 
-%.o: %.cpp
+$(BUILD_DIR)/%.o: %.cpp
+	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -rf $(BUILD_DIR)
 
 run: $(TARGET)
 	./$(TARGET) tests/firmware.hex
