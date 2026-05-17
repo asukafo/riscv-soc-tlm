@@ -1,0 +1,5 @@
+*.o
+my_rv32
+*.dylib
+.DS_Store
+build/
