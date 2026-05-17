@@ -6,9 +6,11 @@
 #include "tlm.h"
 #include "tlm_utils/simple_initiator_socket.h"
 
-namespace rv32 {
+namespace rv32
+{
 
-class MemoryInterface {
+class MemoryInterface
+{
    public:
     tlm_utils::simple_initiator_socket<MemoryInterface> socket;
 

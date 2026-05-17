@@ -7,46 +7,59 @@
 #include "cpu/rv32-lt/memory_interface.h"
 #include "cpu/rv32-lt/registers.h"
 
-namespace rv32 {
+namespace rv32
+{
 
-class Instruction {
+class Instruction
+{
    public:
-    Instruction(uint32_t instr) : m_instr(instr) {
+    Instruction(uint32_t instr) : m_instr(instr)
+    {
     }
 
-    uint32_t opcode() const {
+    uint32_t opcode() const
+    {
         return m_instr & 0x7F;
     }
-    uint32_t rd() const {
+    uint32_t rd() const
+    {
         return (m_instr >> 7) & 0x1F;
     }
-    uint32_t funct3() const {
+    uint32_t funct3() const
+    {
         return (m_instr >> 12) & 0x7;
     }
-    uint32_t rs1() const {
+    uint32_t rs1() const
+    {
         return (m_instr >> 15) & 0x1F;
     }
-    uint32_t rs2() const {
+    uint32_t rs2() const
+    {
         return (m_instr >> 20) & 0x1F;
     }
-    uint32_t funct7() const {
+    uint32_t funct7() const
+    {
         return (m_instr >> 25) & 0x7F;
     }
-    uint32_t getInstr() const {
+    uint32_t getInstr() const
+    {
         return m_instr;
     }
 
-    int32_t imm_I() const {
+    int32_t imm_I() const
+    {
         return static_cast<int32_t>(m_instr) >> 20;
     }
 
-    int32_t imm_S() const {
+    int32_t imm_S() const
+    {
         int32_t val = (static_cast<int32_t>(m_instr) >> 25) & 0x7F;
         val |= static_cast<int32_t>(m_instr >> 7) & 0x1F; /* set bottom 5 bits */
         return (val << 20) >> 20;                         /* sign-extend from bit 11 */
     }
 
-    int32_t imm_B() const {
+    int32_t imm_B() const
+    {
         int32_t val = 0;
         val |= ((m_instr >> 8) & 0xF) << 1;
         val |= ((m_instr >> 25) & 0x3F) << 5;
@@ -55,11 +68,13 @@ class Instruction {
         return (val << 19) >> 19; /* sign-extend from bit 12 */
     }
 
-    uint32_t imm_U() const {
+    uint32_t imm_U() const
+    {
         return m_instr & 0xFFFFF000;
     }
 
-    int32_t imm_J() const {
+    int32_t imm_J() const
+    {
         int32_t val = 0;
         val |= ((m_instr >> 21) & 0x3FF) << 1;
         val |= ((m_instr >> 20) & 0x1) << 11;
@@ -68,7 +83,8 @@ class Instruction {
         return (val << 11) >> 11; /* sign-extend from bit 20 */
     }
 
-    uint32_t shamt() const {
+    uint32_t shamt() const
+    {
         return (m_instr >> 20) & 0x1F;
     }
 
@@ -76,9 +92,11 @@ class Instruction {
     uint32_t m_instr;
 };
 
-class Executor {
+class Executor
+{
    public:
-    Executor(Registers* r, MemoryInterface* m) : regs(r), mem_if(m) {
+    Executor(Registers* r, MemoryInterface* m) : regs(r), mem_if(m)
+    {
     }
 
     bool execute(uint32_t instr_raw);
@@ -136,22 +154,26 @@ class Executor {
 
 // ─── Immediate-type instructions ──────────────────────────────────────
 
-inline void Executor::LUI(const Instruction& i) {
+inline void Executor::LUI(const Instruction& i)
+{
     regs->setValue(i.rd(), i.imm_U());
 }
 
-inline void Executor::AUIPC(const Instruction& i) {
+inline void Executor::AUIPC(const Instruction& i)
+{
     regs->setValue(i.rd(), regs->getPC() + i.imm_U());
 }
 
-inline bool Executor::JAL(const Instruction& i) {
+inline bool Executor::JAL(const Instruction& i)
+{
     uint32_t link = regs->getPC() + 4;
     regs->setValue(i.rd(), link);
     regs->setPC(regs->getPC() + i.imm_J());
     return true;
 }
 
-inline bool Executor::JALR(const Instruction& i) {
+inline bool Executor::JALR(const Instruction& i)
+{
     uint32_t link = regs->getPC() + 4;
     uint32_t target = (regs->getValue(i.rs1()) + i.imm_I()) & ~1u;
     regs->setValue(i.rd(), link);
@@ -161,43 +183,55 @@ inline bool Executor::JALR(const Instruction& i) {
 
 // ─── Branch instructions ──────────────────────────────────────────────
 
-inline bool Executor::BEQ(const Instruction& i) {
-    if (regs->getValue(i.rs1()) == regs->getValue(i.rs2())) {
+inline bool Executor::BEQ(const Instruction& i)
+{
+    if (regs->getValue(i.rs1()) == regs->getValue(i.rs2()))
+    {
         regs->setPC(regs->getPC() + i.imm_B());
         return true;
     }
     return false;
 }
-inline bool Executor::BNE(const Instruction& i) {
-    if (regs->getValue(i.rs1()) != regs->getValue(i.rs2())) {
+inline bool Executor::BNE(const Instruction& i)
+{
+    if (regs->getValue(i.rs1()) != regs->getValue(i.rs2()))
+    {
         regs->setPC(regs->getPC() + i.imm_B());
         return true;
     }
     return false;
 }
-inline bool Executor::BLT(const Instruction& i) {
-    if ((int32_t)regs->getValue(i.rs1()) < (int32_t)regs->getValue(i.rs2())) {
+inline bool Executor::BLT(const Instruction& i)
+{
+    if ((int32_t)regs->getValue(i.rs1()) < (int32_t)regs->getValue(i.rs2()))
+    {
         regs->setPC(regs->getPC() + i.imm_B());
         return true;
     }
     return false;
 }
-inline bool Executor::BGE(const Instruction& i) {
-    if ((int32_t)regs->getValue(i.rs1()) >= (int32_t)regs->getValue(i.rs2())) {
+inline bool Executor::BGE(const Instruction& i)
+{
+    if ((int32_t)regs->getValue(i.rs1()) >= (int32_t)regs->getValue(i.rs2()))
+    {
         regs->setPC(regs->getPC() + i.imm_B());
         return true;
     }
     return false;
 }
-inline bool Executor::BLTU(const Instruction& i) {
-    if (regs->getValue(i.rs1()) < regs->getValue(i.rs2())) {
+inline bool Executor::BLTU(const Instruction& i)
+{
+    if (regs->getValue(i.rs1()) < regs->getValue(i.rs2()))
+    {
         regs->setPC(regs->getPC() + i.imm_B());
         return true;
     }
     return false;
 }
-inline bool Executor::BGEU(const Instruction& i) {
-    if (regs->getValue(i.rs1()) >= regs->getValue(i.rs2())) {
+inline bool Executor::BGEU(const Instruction& i)
+{
+    if (regs->getValue(i.rs1()) >= regs->getValue(i.rs2()))
+    {
         regs->setPC(regs->getPC() + i.imm_B());
         return true;
     }
@@ -206,27 +240,32 @@ inline bool Executor::BGEU(const Instruction& i) {
 
 // ─── Load instructions ────────────────────────────────────────────────
 
-inline void Executor::LB(const Instruction& i) {
+inline void Executor::LB(const Instruction& i)
+{
     uint64_t addr = regs->getValue(i.rs1()) + i.imm_I();
     int8_t val = (int8_t)mem_if->readDataMem(addr, 1);
     regs->setValue(i.rd(), (int32_t)val);
 }
-inline void Executor::LH(const Instruction& i) {
+inline void Executor::LH(const Instruction& i)
+{
     uint64_t addr = regs->getValue(i.rs1()) + i.imm_I();
     int16_t val = (int16_t)mem_if->readDataMem(addr, 2);
     regs->setValue(i.rd(), (int32_t)val);
 }
-inline void Executor::LW(const Instruction& i) {
+inline void Executor::LW(const Instruction& i)
+{
     uint64_t addr = regs->getValue(i.rs1()) + i.imm_I();
     uint32_t val = mem_if->readDataMem(addr, 4);
     regs->setValue(i.rd(), val);
 }
-inline void Executor::LBU(const Instruction& i) {
+inline void Executor::LBU(const Instruction& i)
+{
     uint64_t addr = regs->getValue(i.rs1()) + i.imm_I();
     uint8_t val = (uint8_t)mem_if->readDataMem(addr, 1);
     regs->setValue(i.rd(), (uint32_t)val);
 }
-inline void Executor::LHU(const Instruction& i) {
+inline void Executor::LHU(const Instruction& i)
+{
     uint64_t addr = regs->getValue(i.rs1()) + i.imm_I();
     uint16_t val = (uint16_t)mem_if->readDataMem(addr, 2);
     regs->setValue(i.rd(), (uint32_t)val);
@@ -234,90 +273,114 @@ inline void Executor::LHU(const Instruction& i) {
 
 // ─── Store instructions ───────────────────────────────────────────────
 
-inline void Executor::SB(const Instruction& i) {
+inline void Executor::SB(const Instruction& i)
+{
     uint64_t addr = regs->getValue(i.rs1()) + i.imm_S();
     mem_if->writeDataMem(addr, regs->getValue(i.rs2()), 1);
 }
-inline void Executor::SH(const Instruction& i) {
+inline void Executor::SH(const Instruction& i)
+{
     uint64_t addr = regs->getValue(i.rs1()) + i.imm_S();
     mem_if->writeDataMem(addr, regs->getValue(i.rs2()), 2);
 }
-inline void Executor::SW(const Instruction& i) {
+inline void Executor::SW(const Instruction& i)
+{
     uint64_t addr = regs->getValue(i.rs1()) + i.imm_S();
     mem_if->writeDataMem(addr, regs->getValue(i.rs2()), 4);
 }
 
 // ─── ALU immediate ────────────────────────────────────────────────────
 
-inline void Executor::ADDI(const Instruction& i) {
+inline void Executor::ADDI(const Instruction& i)
+{
     regs->setValue(i.rd(), regs->getValue(i.rs1()) + i.imm_I());
 }
-inline void Executor::SLTI(const Instruction& i) {
+inline void Executor::SLTI(const Instruction& i)
+{
     regs->setValue(i.rd(), ((int32_t)regs->getValue(i.rs1()) < i.imm_I()) ? 1 : 0);
 }
-inline void Executor::SLTIU(const Instruction& i) {
+inline void Executor::SLTIU(const Instruction& i)
+{
     regs->setValue(i.rd(), (regs->getValue(i.rs1()) < (uint32_t)i.imm_I()) ? 1 : 0);
 }
-inline void Executor::XORI(const Instruction& i) {
+inline void Executor::XORI(const Instruction& i)
+{
     regs->setValue(i.rd(), regs->getValue(i.rs1()) ^ i.imm_I());
 }
-inline void Executor::ORI(const Instruction& i) {
+inline void Executor::ORI(const Instruction& i)
+{
     regs->setValue(i.rd(), regs->getValue(i.rs1()) | i.imm_I());
 }
-inline void Executor::ANDI(const Instruction& i) {
+inline void Executor::ANDI(const Instruction& i)
+{
     regs->setValue(i.rd(), regs->getValue(i.rs1()) & i.imm_I());
 }
-inline void Executor::SLLI(const Instruction& i) {
+inline void Executor::SLLI(const Instruction& i)
+{
     regs->setValue(i.rd(), regs->getValue(i.rs1()) << i.shamt());
 }
-inline void Executor::SRLI(const Instruction& i) {
+inline void Executor::SRLI(const Instruction& i)
+{
     regs->setValue(i.rd(), regs->getValue(i.rs1()) >> i.shamt());
 }
-inline void Executor::SRAI(const Instruction& i) {
+inline void Executor::SRAI(const Instruction& i)
+{
     regs->setValue(i.rd(), (int32_t)regs->getValue(i.rs1()) >> i.shamt());
 }
 
 // ─── ALU register-register ────────────────────────────────────────────
 
-inline void Executor::ADD(const Instruction& i) {
+inline void Executor::ADD(const Instruction& i)
+{
     regs->setValue(i.rd(), regs->getValue(i.rs1()) + regs->getValue(i.rs2()));
 }
-inline void Executor::SUB(const Instruction& i) {
+inline void Executor::SUB(const Instruction& i)
+{
     regs->setValue(i.rd(), regs->getValue(i.rs1()) - regs->getValue(i.rs2()));
 }
-inline void Executor::SLL(const Instruction& i) {
+inline void Executor::SLL(const Instruction& i)
+{
     regs->setValue(i.rd(), regs->getValue(i.rs1()) << (regs->getValue(i.rs2()) & 0x1F));
 }
-inline void Executor::SLT(const Instruction& i) {
+inline void Executor::SLT(const Instruction& i)
+{
     regs->setValue(i.rd(),
                    ((int32_t)regs->getValue(i.rs1()) < (int32_t)regs->getValue(i.rs2())) ? 1 : 0);
 }
-inline void Executor::SLTU(const Instruction& i) {
+inline void Executor::SLTU(const Instruction& i)
+{
     regs->setValue(i.rd(), (regs->getValue(i.rs1()) < regs->getValue(i.rs2())) ? 1 : 0);
 }
-inline void Executor::XOR(const Instruction& i) {
+inline void Executor::XOR(const Instruction& i)
+{
     regs->setValue(i.rd(), regs->getValue(i.rs1()) ^ regs->getValue(i.rs2()));
 }
-inline void Executor::SRL(const Instruction& i) {
+inline void Executor::SRL(const Instruction& i)
+{
     regs->setValue(i.rd(), regs->getValue(i.rs1()) >> (regs->getValue(i.rs2()) & 0x1F));
 }
-inline void Executor::SRA(const Instruction& i) {
+inline void Executor::SRA(const Instruction& i)
+{
     regs->setValue(i.rd(), (int32_t)regs->getValue(i.rs1()) >> (regs->getValue(i.rs2()) & 0x1F));
 }
-inline void Executor::OR(const Instruction& i) {
+inline void Executor::OR(const Instruction& i)
+{
     regs->setValue(i.rd(), regs->getValue(i.rs1()) | regs->getValue(i.rs2()));
 }
-inline void Executor::AND(const Instruction& i) {
+inline void Executor::AND(const Instruction& i)
+{
     regs->setValue(i.rd(), regs->getValue(i.rs1()) & regs->getValue(i.rs2()));
 }
 
 // ─── System ───────────────────────────────────────────────────────────
 
-inline void Executor::FENCE(const Instruction& /*i*/) {
+inline void Executor::FENCE(const Instruction& /*i*/)
+{
     /* NOP */
 }
 
-inline bool Executor::ECALL(const Instruction& /*i*/) {
+inline bool Executor::ECALL(const Instruction& /*i*/)
+{
     std::cout << "\n=== ECALL: simulation stopped ===" << std::endl;
     regs->dump();
     sc_core::sc_stop();
@@ -326,10 +389,12 @@ inline bool Executor::ECALL(const Instruction& /*i*/) {
 
 // ─── Decode + Execute ─────────────────────────────────────────────────
 
-inline bool Executor::execute(uint32_t instr_raw) {
+inline bool Executor::execute(uint32_t instr_raw)
+{
     Instruction inst(instr_raw);
 
-    switch (inst.opcode()) {
+    switch (inst.opcode())
+    {
         case 0b0110111:
             LUI(inst);
             return false;
@@ -342,7 +407,8 @@ inline bool Executor::execute(uint32_t instr_raw) {
             return JALR(inst);
 
         case 0b1100011:
-            switch (inst.funct3()) {
+            switch (inst.funct3())
+            {
                 case 0b000:
                     return BEQ(inst);
                 case 0b001:
@@ -359,7 +425,8 @@ inline bool Executor::execute(uint32_t instr_raw) {
             break;
 
         case 0b0000011:
-            switch (inst.funct3()) {
+            switch (inst.funct3())
+            {
                 case 0b000:
                     LB(inst);
                     return false;
@@ -379,7 +446,8 @@ inline bool Executor::execute(uint32_t instr_raw) {
             break;
 
         case 0b0100011:
-            switch (inst.funct3()) {
+            switch (inst.funct3())
+            {
                 case 0b000:
                     SB(inst);
                     return false;
@@ -393,7 +461,8 @@ inline bool Executor::execute(uint32_t instr_raw) {
             break;
 
         case 0b0010011:
-            switch (inst.funct3()) {
+            switch (inst.funct3())
+            {
                 case 0b000:
                     ADDI(inst);
                     return false;
@@ -416,7 +485,8 @@ inline bool Executor::execute(uint32_t instr_raw) {
                     SLLI(inst);
                     return false;
                 case 0b101:
-                    switch (inst.funct7()) {
+                    switch (inst.funct7())
+                    {
                         case 0b0000000:
                             SRLI(inst);
                             return false;
@@ -429,9 +499,11 @@ inline bool Executor::execute(uint32_t instr_raw) {
             break;
 
         case 0b0110011:
-            switch (inst.funct3()) {
+            switch (inst.funct3())
+            {
                 case 0b000:
-                    switch (inst.funct7()) {
+                    switch (inst.funct7())
+                    {
                         case 0b0000000:
                             ADD(inst);
                             return false;
@@ -453,7 +525,8 @@ inline bool Executor::execute(uint32_t instr_raw) {
                     XOR(inst);
                     return false;
                 case 0b101:
-                    switch (inst.funct7()) {
+                    switch (inst.funct7())
+                    {
                         case 0b0000000:
                             SRL(inst);
                             return false;
@@ -476,7 +549,8 @@ inline bool Executor::execute(uint32_t instr_raw) {
             return false;
 
         case 0b1110011:
-            if (inst.funct3() == 0b000) {
+            if (inst.funct3() == 0b000)
+            {
                 if (inst.imm_I() == 0)
                     return ECALL(inst);
             }

@@ -6,11 +6,14 @@
 #include <iomanip>
 #include <iostream>
 
-namespace rv32 {
+namespace rv32
+{
 
-class Registers {
+class Registers
+{
    public:
-    enum {
+    enum
+    {
         x0 = 0,
         x1 = 1,
         x2 = 2,
@@ -78,38 +81,47 @@ class Registers {
         t6 = x31
     };
 
-    Registers() {
+    Registers()
+    {
         regs.fill(0);
         pc = 0x80000000;
         regs[sp] = 0x800000;  // stack pointer at top of 8MB memory
     }
 
-    uint32_t getValue(uint32_t reg_num) const {
+    uint32_t getValue(uint32_t reg_num) const
+    {
         if (reg_num < 32)
             return regs[reg_num];
         return 0xFFFFFFFF;
     }
 
-    void setValue(uint32_t reg_num, uint32_t value) {
-        if (reg_num != 0 && reg_num < 32) {
+    void setValue(uint32_t reg_num, uint32_t value)
+    {
+        if (reg_num != 0 && reg_num < 32)
+        {
             regs[reg_num] = value;
         }
     }
 
-    uint32_t getPC() const {
+    uint32_t getPC() const
+    {
         return pc;
     }
-    void setPC(uint32_t new_pc) {
+    void setPC(uint32_t new_pc)
+    {
         pc = new_pc;
     }
-    void incPC() {
+    void incPC()
+    {
         pc += 4;
     }
 
-    void dump() const {
+    void dump() const
+    {
         std::cout << "\n=== Register Dump ===" << std::endl;
         std::cout << "PC = 0x" << std::hex << pc << std::dec << std::endl;
-        for (int i = 0; i < 32; i++) {
+        for (int i = 0; i < 32; i++)
+        {
             std::cout << "x" << std::dec << std::setw(2) << i << " = 0x" << std::hex << std::setw(8)
                       << std::setfill('0') << regs[i] << std::setfill(' ') << std::dec;
             if ((i + 1) % 4 == 0)

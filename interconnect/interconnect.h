@@ -9,9 +9,11 @@
 #include "tlm_utils/multi_passthrough_target_socket.h"
 #include "tlm_utils/simple_initiator_socket.h"
 
-namespace rv32 {
+namespace rv32
+{
 
-class Interconnect : public sc_core::sc_module {
+class Interconnect : public sc_core::sc_module
+{
    public:
     tlm_utils::multi_passthrough_target_socket<Interconnect> target_socket;
     tlm_utils::simple_initiator_socket<Interconnect> mem_socket;
@@ -22,7 +24,8 @@ class Interconnect : public sc_core::sc_module {
              tlm_utils::simple_initiator_socket<Interconnect>& socket);
 
    private:
-    struct AddressRegion {
+    struct AddressRegion
+    {
         uint64_t base;
         uint64_t size;
         tlm_utils::simple_initiator_socket<Interconnect>* socket;

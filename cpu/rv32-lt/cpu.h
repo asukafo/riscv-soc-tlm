@@ -10,9 +10,11 @@
 #include "tlm.h"
 #include "tlm_utils/simple_initiator_socket.h"
 
-namespace rv32 {
+namespace rv32
+{
 
-class CPU : public sc_core::sc_module {
+class CPU : public sc_core::sc_module
+{
    public:
     Registers regs;
     MemoryInterface mem_if;
