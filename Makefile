@@ -51,3 +51,8 @@ test: $(TARGET)
 	@echo ""
 	@echo "=== Test 4: Call ==="
 	./$(TARGET) tests/test_call.hex && echo "PASS"
+
+ctest: $(TARGET)
+	$(MAKE) -C tests/c-programs
+	@echo "=== C Demo ==="
+	./$(TARGET) tests/c-programs/test_demo.hex && echo "PASS"
