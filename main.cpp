@@ -43,11 +43,12 @@ int sc_main(int argc, char* argv[])
     // ── DMA ────────────────────────────────────────────────────────────
     DMA dma("dma");
     dma.initiator_socket.bind(interconnect.target_socket);
+    interconnect.dma_mmio_socket.bind(dma.target_socket);
 
     // ── Display ────────────────────────────────────────────────────────
-    // 16x16 framebuffer at 0x1000
-    Display display("display", 0x1000, 16, 16);
+    Display display("display");
     display.initiator_socket.bind(interconnect.target_socket);
+    interconnect.display_mmio_socket.bind(display.target_socket);
 
     // ── Topology 2: Separated I-Cache + D-Cache ───────────────────────
     // Comment out Topology 1 and uncomment this block to switch:
@@ -60,8 +61,11 @@ int sc_main(int argc, char* argv[])
     // icache.initiator_socket.bind(interconnect.target_socket);
     // dcache.initiator_socket.bind(interconnect.target_socket);
 
+    // ── Address map ────────────────────────────────────────────────────
     interconnect.map(0x00000000, Memory::SIZE, interconnect.mem_socket);
     interconnect.map(0x80000000, Memory::SIZE, interconnect.mem_socket);
+    interconnect.map(0x10000000, 0x1000, interconnect.dma_mmio_socket);
+    interconnect.map(0x10001000, 0x1000, interconnect.display_mmio_socket);
 
     interconnect.mem_socket.bind(memory.socket);
 

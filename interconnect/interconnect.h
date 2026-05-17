@@ -17,6 +17,8 @@ class Interconnect : public sc_core::sc_module
 public:
     tlm_utils::multi_passthrough_target_socket<Interconnect> target_socket;
     tlm_utils::simple_initiator_socket<Interconnect> mem_socket;
+    tlm_utils::simple_initiator_socket<Interconnect> dma_mmio_socket;
+    tlm_utils::simple_initiator_socket<Interconnect> display_mmio_socket;
 
     Interconnect(sc_core::sc_module_name name);
 

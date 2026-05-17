@@ -6,7 +6,8 @@ namespace riscv_soc_tlm
 {
 
 Interconnect::Interconnect(sc_core::sc_module_name name)
-    : sc_core::sc_module(name), target_socket("target_socket"), mem_socket("mem_socket")
+    : sc_core::sc_module(name), target_socket("target_socket"), mem_socket("mem_socket"),
+      dma_mmio_socket("dma_mmio_socket"), display_mmio_socket("display_mmio_socket")
 {
     target_socket.register_b_transport(this, &Interconnect::b_transport);
 }
