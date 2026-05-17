@@ -12,7 +12,8 @@ LIBS     = -lsystemc -lpthread
 SRCS  = main.cpp \
         cpu/rv32-lt/cpu.cpp \
         cpu/rv32-lt/memory_interface.cpp \
-        mem/memory.cpp
+        mem/memory.cpp \
+        interconnect/interconnect.cpp
 
 OBJS  = $(SRCS:.cpp=.o)
 TARGET = my_rv32

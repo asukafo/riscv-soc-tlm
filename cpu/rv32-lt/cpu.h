@@ -13,8 +13,6 @@ namespace rv32 {
 
 class CPU : public sc_core::sc_module {
 public:
-    tlm_utils::simple_initiator_socket<CPU> instr_socket;
-
     Registers regs;
     MemoryInterface mem_if;
 
@@ -24,7 +22,6 @@ private:
     Executor executor;
 
     void CPU_thread();
-    uint32_t fetchInstruction();
 };
 
 } // namespace rv32

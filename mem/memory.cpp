@@ -12,7 +12,7 @@ Memory::Memory(sc_core::sc_module_name name)
     std::memset(mem, 0, SIZE);
 }
 
-void Memory::b_transport(int /*id*/, tlm::tlm_generic_payload& trans, sc_core::sc_time& delay) {
+void Memory::b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay) {
     uint64_t addr = trans.get_address();
     uint32_t offset = toOffset(addr);
     unsigned char* ptr = trans.get_data_ptr();

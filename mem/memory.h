@@ -5,7 +5,7 @@
 #include <string>
 #include "systemc"
 #include "tlm.h"
-#include "tlm_utils/multi_passthrough_target_socket.h"
+#include "tlm_utils/simple_target_socket.h"
 
 namespace rv32 {
 
@@ -13,7 +13,7 @@ class Memory : public sc_core::sc_module {
 public:
     static constexpr uint32_t SIZE = 8 * 1024 * 1024;  // 8MB
 
-    tlm_utils::multi_passthrough_target_socket<Memory> socket;
+    tlm_utils::simple_target_socket<Memory> socket;
 
     Memory(sc_core::sc_module_name name);
 
@@ -21,7 +21,7 @@ public:
     uint32_t getStartPC() const { return start_pc; }
 
 private:
-    void b_transport(int id, tlm::tlm_generic_payload& trans, sc_core::sc_time& delay);
+    void b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay);
 
     uint32_t toOffset(uint64_t addr) const {
         int64_t offset = (int64_t)(addr - base_addr);
