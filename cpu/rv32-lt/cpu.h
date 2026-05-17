@@ -5,9 +5,9 @@
 #include "systemc"
 #include "tlm.h"
 #include "tlm_utils/simple_initiator_socket.h"
-#include "Registers.h"
-#include "MemoryInterface.h"
-#include "BASE_ISA.h"
+#include "cpu/rv32-lt/registers.h"
+#include "cpu/rv32-lt/memory_interface.h"
+#include "cpu/rv32-lt/base_isa.h"
 
 namespace rv32 {
 

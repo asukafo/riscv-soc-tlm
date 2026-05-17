@@ -1,4 +1,4 @@
-#include "MemoryInterface.h"
+#include "cpu/rv32-lt/memory_interface.h"
 #include <iostream>
 #include <sstream>
 

@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
-#include "CPU.h"
-#include "Memory.h"
+#include "cpu/rv32-lt/cpu.h"
+#include "mem/memory.h"
 
 using namespace rv32;
 

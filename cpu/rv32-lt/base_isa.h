@@ -3,8 +3,8 @@
 
 #include <cstdint>
 #include <iostream>
-#include "Registers.h"
-#include "MemoryInterface.h"
+#include "cpu/rv32-lt/registers.h"
+#include "cpu/rv32-lt/memory_interface.h"
 
 namespace rv32 {
 

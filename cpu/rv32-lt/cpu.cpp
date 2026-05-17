@@ -1,4 +1,4 @@
-#include "CPU.h"
+#include "cpu/rv32-lt/cpu.h"
 #include <iostream>
 
 namespace rv32 {
