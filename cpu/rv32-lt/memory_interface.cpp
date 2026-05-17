@@ -3,7 +3,7 @@
 #include <iostream>
 #include <sstream>
 
-namespace rv32
+namespace riscv_soc_tlm
 {
 
 MemoryInterface::MemoryInterface() : socket("socket")
@@ -81,4 +81,4 @@ uint32_t MemoryInterface::fetchInstruction(uint32_t addr)
     return data;
 }
 
-}  // namespace rv32
+}  // namespace riscv_soc_tlm

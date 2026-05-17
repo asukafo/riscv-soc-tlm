@@ -6,7 +6,7 @@
 #include "tlm.h"
 #include "tlm_utils/simple_initiator_socket.h"
 
-namespace rv32
+namespace riscv_soc_tlm
 {
 
 class MemoryInterface
@@ -21,6 +21,6 @@ public:
     uint32_t fetchInstruction(uint32_t addr);
 };
 
-}  // namespace rv32
+}  // namespace riscv_soc_tlm
 
 #endif

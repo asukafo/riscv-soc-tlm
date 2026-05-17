@@ -6,7 +6,7 @@
 #include <iomanip>
 #include <iostream>
 
-namespace rv32
+namespace riscv_soc_tlm
 {
 
 class Registers
@@ -137,6 +137,6 @@ private:
     uint32_t pc;
 };
 
-}  // namespace rv32
+}  // namespace riscv_soc_tlm
 
 #endif

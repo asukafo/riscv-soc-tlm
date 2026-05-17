@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-namespace rv32
+namespace riscv_soc_tlm
 {
 
 Interconnect::Interconnect(sc_core::sc_module_name name)
@@ -35,4 +35,4 @@ void Interconnect::b_transport(int /*id*/, tlm::tlm_generic_payload& trans, sc_c
     trans.set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
 }
 
-}  // namespace rv32
+}  // namespace riscv_soc_tlm

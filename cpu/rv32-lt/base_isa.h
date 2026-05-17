@@ -7,7 +7,7 @@
 #include "cpu/rv32-lt/memory_interface.h"
 #include "cpu/rv32-lt/registers.h"
 
-namespace rv32
+namespace riscv_soc_tlm
 {
 
 class Instruction
@@ -562,6 +562,6 @@ inline bool Executor::execute(uint32_t instr_raw)
     return false;
 }
 
-}  // namespace rv32
+}  // namespace riscv_soc_tlm
 
 #endif

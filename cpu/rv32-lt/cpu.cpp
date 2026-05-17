@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-namespace rv32
+namespace riscv_soc_tlm
 {
 
 SC_HAS_PROCESS(CPU);
@@ -30,4 +30,4 @@ void CPU::CPU_thread()
     }
 }
 
-}  // namespace rv32
+}  // namespace riscv_soc_tlm

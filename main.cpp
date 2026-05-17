@@ -5,7 +5,7 @@
 #include "interconnect/interconnect.h"
 #include "mem/memory.h"
 
-using namespace rv32;
+using namespace riscv_soc_tlm;
 
 int sc_main(int argc, char* argv[])
 {

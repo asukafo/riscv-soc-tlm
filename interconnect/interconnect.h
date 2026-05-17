@@ -9,7 +9,7 @@
 #include "tlm_utils/multi_passthrough_target_socket.h"
 #include "tlm_utils/simple_initiator_socket.h"
 
-namespace rv32
+namespace riscv_soc_tlm
 {
 
 class Interconnect : public sc_core::sc_module
@@ -35,6 +35,6 @@ private:
     void b_transport(int id, tlm::tlm_generic_payload& trans, sc_core::sc_time& delay);
 };
 
-}  // namespace rv32
+}  // namespace riscv_soc_tlm
 
 #endif

@@ -4,7 +4,7 @@
 #include <fstream>
 #include <iostream>
 
-namespace rv32
+namespace riscv_soc_tlm
 {
 
 Memory::Memory(sc_core::sc_module_name name)
@@ -138,4 +138,4 @@ void Memory::loadHex(const std::string& filename)
               << ", entry PC=0x" << start_pc << std::dec << std::endl;
 }
 
-}  // namespace rv32
+}  // namespace riscv_soc_tlm

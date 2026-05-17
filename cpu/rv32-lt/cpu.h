@@ -10,7 +10,7 @@
 #include "tlm.h"
 #include "tlm_utils/simple_initiator_socket.h"
 
-namespace rv32
+namespace riscv_soc_tlm
 {
 
 class CPU : public sc_core::sc_module
@@ -27,6 +27,6 @@ private:
     void CPU_thread();
 };
 
-}  // namespace rv32
+}  // namespace riscv_soc_tlm
 
 #endif

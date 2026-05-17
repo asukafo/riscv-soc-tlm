@@ -8,7 +8,7 @@
 #include "tlm.h"
 #include "tlm_utils/simple_target_socket.h"
 
-namespace rv32
+namespace riscv_soc_tlm
 {
 
 class Memory : public sc_core::sc_module
@@ -44,6 +44,6 @@ private:
     uint64_t base_addr;
 };
 
-}  // namespace rv32
+}  // namespace riscv_soc_tlm
 
 #endif
