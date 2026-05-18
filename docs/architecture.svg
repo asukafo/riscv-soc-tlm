@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" width="1200" height="700">
+<rect width="100%" height="100%" fill="white"/>
+<defs>
+<marker id="arrowhead_555555" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+<polygon points="0 0, 8 3, 0 6" fill="#555555"/>
+</marker>
+<marker id="arrowhead_2255cc" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+<polygon points="0 0, 8 3, 0 6" fill="#2255cc"/>
+</marker>
+<marker id="arrowhead_cc5522" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+<polygon points="0 0, 8 3, 0 6" fill="#cc5522"/>
+</marker>
+<marker id="arrowhead_00aa00" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+<polygon points="0 0, 8 3, 0 6" fill="#00aa00"/>
+</marker>
+</defs>
+<rect x="30" y="120" width="160" height="160" rx="6" fill="#ffffff" stroke="#6c8ebf" stroke-width="1.5"/>
+<rect x="30" y="120" width="160" height="26" rx="6" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.2"/>
+<path d="M30 140 L190 140" stroke="#6c8ebf" stroke-width="1"/>
+<rect x="30" y="146" width="160" height="134" rx="0" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
+<rect x="30" y="278" width="160" height="2" rx="6" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
+<text x="110.0" y="138" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#333333" text-anchor="middle" style="font-weight:bold;">CPU (core.h/cpp)</text>
+<rect x="35" y="160" width="150" height="35" rx="3" fill="#e1d5e7" stroke="#9673a6" stroke-width="1.5"/>
+<text x="110.0" y="175.5" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="middle" style="">instr_socket</text>
+<text x="110.0" y="189.5" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="middle" style="">(simple_initiator)</text>
+<rect x="35" y="215" width="150" height="35" rx="3" fill="#e1d5e7" stroke="#9673a6" stroke-width="1.5"/>
+<text x="110.0" y="230.5" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="middle" style="">data_socket</text>
+<text x="110.0" y="244.5" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="middle" style="">(simple_initiator)</text>
+<rect x="220" y="120" width="160" height="160" rx="6" fill="#ffffff" stroke="#82b366" stroke-width="1.5"/>
+<rect x="220" y="120" width="160" height="26" rx="6" fill="#d5e8d4" stroke="#82b366" stroke-width="1.2"/>
+<path d="M220 140 L380 140" stroke="#82b366" stroke-width="1"/>
+<rect x="220" y="146" width="160" height="134" rx="0" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5"/>
+<rect x="220" y="278" width="160" height="2" rx="6" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5"/>
+<text x="300.0" y="138" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#333333" text-anchor="middle" style="font-weight:bold;">Cache (unified I/D)</text>
+<rect x="225" y="160" width="150" height="35" rx="3" fill="#f8cecc" stroke="#b85450" stroke-width="1.5"/>
+<text x="300.0" y="175.5" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="middle" style="">target_socket</text>
+<text x="300.0" y="189.5" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="middle" style="">(multi_passthrough_target)</text>
+<rect x="225" y="215" width="150" height="35" rx="3" fill="#e1d5e7" stroke="#9673a6" stroke-width="1.5"/>
+<text x="300.0" y="230.5" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="middle" style="">initiator_socket</text>
+<text x="300.0" y="244.5" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="middle" style="">(simple_initiator)</text>
+<rect x="420" y="80" width="210" height="400" rx="6" fill="#ffffff" stroke="#d6b656" stroke-width="1.5"/>
+<rect x="420" y="80" width="210" height="26" rx="6" fill="#fff2cc" stroke="#d6b656" stroke-width="1.2"/>
+<path d="M420 100 L630 100" stroke="#d6b656" stroke-width="1"/>
+<rect x="420" y="106" width="210" height="374" rx="0" fill="#fff2cc" stroke="#d6b656" stroke-width="1.5"/>
+<rect x="420" y="478" width="210" height="2" rx="6" fill="#fff2cc" stroke="#d6b656" stroke-width="1.5"/>
+<text x="525.0" y="98" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#333333" text-anchor="middle" style="font-weight:bold;">Interconnect</text>
+<rect x="425" y="120" width="200" height="30" rx="3" fill="#f8cecc" stroke="#b85450" stroke-width="1.5"/>
+<text x="525.0" y="133.0" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="middle" style="">target_socket</text>
+<text x="525.0" y="147.0" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="middle" style="">(multi_passthrough_target)</text>
+<rect x="425" y="175" width="200" height="30" rx="3" fill="#e1d5e7" stroke="#9673a6" stroke-width="1.5"/>
+<text x="525.0" y="195.0" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="middle" style="">mem_socket (simple_initiator)</text>
+<rect x="425" y="230" width="200" height="30" rx="3" fill="#e1d5e7" stroke="#9673a6" stroke-width="1.5"/>
+<text x="525.0" y="250.0" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="middle" style="">dma_mmio_socket (simple_initiator)</text>
+<rect x="425" y="285" width="200" height="30" rx="3" fill="#e1d5e7" stroke="#9673a6" stroke-width="1.5"/>
+<text x="525.0" y="305.0" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="middle" style="">display_mmio_socket (simple_initiator)</text>
+<rect x="425" y="340" width="200" height="80" rx="0" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="435" y="360" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="start" style="font-weight:bold;">b_transport routing:</text>
+<text x="435" y="377" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#666666" text-anchor="start" style="">for each AddressRegion:</text>
+<text x="440" y="392" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#666666" text-anchor="start" style="">if addr in [base, base+size) -> forward to socket</text>
+<text x="440" y="407" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#666666" text-anchor="start" style="">else -> TLM_ADDRESS_ERROR_RESPONSE</text>
+<rect x="660" y="100" width="170" height="85" rx="6" fill="#ffffff" stroke="#666666" stroke-width="1.5"/>
+<rect x="660" y="100" width="170" height="26" rx="6" fill="#f5f5f5" stroke="#666666" stroke-width="1.2"/>
+<path d="M660 120 L830 120" stroke="#666666" stroke-width="1"/>
+<rect x="660" y="126" width="170" height="59" rx="0" fill="#f5f5f5" stroke="#666666" stroke-width="1.5"/>
+<rect x="660" y="183" width="170" height="2" rx="6" fill="#f5f5f5" stroke="#666666" stroke-width="1.5"/>
+<text x="745.0" y="118" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#333333" text-anchor="middle" style="font-weight:bold;">Memory (8MB)</text>
+<rect x="665" y="135" width="160" height="30" rx="3" fill="#f8cecc" stroke="#b85450" stroke-width="1.5"/>
+<text x="745.0" y="155.0" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="middle" style="">socket (simple_target)</text>
+<rect x="660" y="230" width="170" height="180" rx="6" fill="#ffffff" stroke="#d79b00" stroke-width="1.5"/>
+<rect x="660" y="230" width="170" height="26" rx="6" fill="#ffe6cc" stroke="#d79b00" stroke-width="1.2"/>
+<path d="M660 250 L830 250" stroke="#d79b00" stroke-width="1"/>
+<rect x="660" y="256" width="170" height="154" rx="0" fill="#ffe6cc" stroke="#d79b00" stroke-width="1.5"/>
+<rect x="660" y="408" width="170" height="2" rx="6" fill="#ffe6cc" stroke="#d79b00" stroke-width="1.5"/>
+<text x="745.0" y="248" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#333333" text-anchor="middle" style="font-weight:bold;">DMA</text>
+<rect x="665" y="265" width="160" height="30" rx="3" fill="#f8cecc" stroke="#b85450" stroke-width="1.5"/>
+<text x="745.0" y="278.0" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="middle" style="">target_socket MMIO</text>
+<text x="745.0" y="292.0" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="middle" style="">(simple_target)</text>
+<rect x="665" y="340" width="160" height="30" rx="3" fill="#e1d5e7" stroke="#9673a6" stroke-width="1.5"/>
+<text x="745.0" y="353.0" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="middle" style="">initiator_socket</text>
+<text x="745.0" y="367.0" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="middle" style="">(simple_initiator)</text>
+<rect x="660" y="455" width="170" height="180" rx="6" fill="#ffffff" stroke="#9673a6" stroke-width="1.5"/>
+<rect x="660" y="455" width="170" height="26" rx="6" fill="#d5e8d4" stroke="#9673a6" stroke-width="1.2"/>
+<path d="M660 475 L830 475" stroke="#9673a6" stroke-width="1"/>
+<rect x="660" y="481" width="170" height="154" rx="0" fill="#d5e8d4" stroke="#9673a6" stroke-width="1.5"/>
+<rect x="660" y="633" width="170" height="2" rx="6" fill="#d5e8d4" stroke="#9673a6" stroke-width="1.5"/>
+<text x="745.0" y="473" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#333333" text-anchor="middle" style="font-weight:bold;">Display</text>
+<rect x="665" y="490" width="160" height="30" rx="3" fill="#f8cecc" stroke="#b85450" stroke-width="1.5"/>
+<text x="745.0" y="503.0" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="middle" style="">target_socket MMIO</text>
+<text x="745.0" y="517.0" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="middle" style="">(simple_target)</text>
+<rect x="665" y="565" width="160" height="30" rx="3" fill="#e1d5e7" stroke="#9673a6" stroke-width="1.5"/>
+<text x="745.0" y="578.0" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="middle" style="">initiator_socket</text>
+<text x="745.0" y="592.0" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="middle" style="">(simple_initiator)</text>
+<line x1="190" y1="177" x2="220" y2="177" stroke="#2255cc" stroke-width="1.5" marker-end="url(#arrowhead_2255cc)"/>
+<line x1="190" y1="232" x2="220" y2="232" stroke="#2255cc" stroke-width="1.5" marker-end="url(#arrowhead_2255cc)"/>
+<line x1="380" y1="232" x2="420" y2="135" stroke="#2255cc" stroke-width="1.5" marker-end="url(#arrowhead_2255cc)"/>
+<line x1="660" y1="355" x2="410" y2="135" stroke="#00aa00" stroke-width="1.5" marker-end="url(#arrowhead_00aa00)"/>
+<line x1="660" y1="580" x2="410" y2="145" stroke="#00aa00" stroke-width="1.5" marker-end="url(#arrowhead_00aa00)"/>
+<line x1="630" y1="190" x2="660" y2="150" stroke="#2255cc" stroke-width="1.5" marker-end="url(#arrowhead_2255cc)"/>
+<text x="650.0" y="165.0" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#2255cc" text-anchor="start" style="">0x80000000</text>
+<line x1="630" y1="245" x2="660" y2="280" stroke="#cc5522" stroke-width="1.5" marker-end="url(#arrowhead_cc5522)"/>
+<text x="650.0" y="257.5" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#cc5522" text-anchor="start" style="">0x10000000</text>
+<line x1="630" y1="300" x2="660" y2="505" stroke="#cc5522" stroke-width="1.5" marker-end="url(#arrowhead_cc5522)"/>
+<text x="650.0" y="397.5" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#cc5522" text-anchor="start" style="">0x10001000</text>
+<rect x="30" y="510" width="320" height="130" rx="6" fill="#ffffff" stroke="#333333" stroke-width="1.5"/>
+<text x="40" y="532" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#333333" text-anchor="start" style="font-weight:bold;">Address Map</text>
+<text x="40" y="555" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="start" style="">0x00000000 - 0x007FFFFF  ->  Memory (low alias)</text>
+<text x="40" y="575" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="start" style="">0x80000000 - 0x807FFFFF  ->  Memory</text>
+<text x="40" y="595" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="start" style="">0x10000000 - 0x10000FFF  ->  DMA MMIO</text>
+<text x="40" y="615" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="start" style="">0x10001000 - 0x10001FFF  ->  Display MMIO</text>
+<rect x="370" y="510" width="280" height="130" rx="6" fill="#ffffff" stroke="#333333" stroke-width="1.5"/>
+<text x="380" y="532" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#333333" text-anchor="start" style="font-weight:bold;">Socket Types / Legend</text>
+<rect x="380" y="545" width="24" height="16" rx="3" fill="#e1d5e7" stroke="#9673a6" stroke-width="1.5"/>
+<text x="410" y="558" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="start" style="">simple_initiator_socket  (master, issues b_transport)</text>
+<rect x="380" y="570" width="24" height="16" rx="3" fill="#f8cecc" stroke="#b85450" stroke-width="1.5"/>
+<text x="410" y="583" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#333333" text-anchor="start" style="">simple_target_socket / multi_passthrough_target  (slave)</text>
+<line x1="380" y1="602" x2="400" y2="602" stroke="#2255cc" stroke-width="1.5" marker-end="url(#arrowhead_2255cc)"/>
+<text x="400" y="607" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#2255cc" text-anchor="start" style="">DATA path</text>
+<line x1="440" y1="602" x2="460" y2="602" stroke="#cc5522" stroke-width="1.5" marker-end="url(#arrowhead_cc5522)"/>
+<text x="460" y="607" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#cc5522" text-anchor="start" style="">CONTROL path</text>
+<line x1="540" y1="602" x2="560" y2="602" stroke="#00aa00" stroke-width="1.5" marker-end="url(#arrowhead_00aa00)"/>
+<text x="560" y="607" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#00aa00" text-anchor="start" style="">DMA/Display initiator</text>
+<text x="60" y="655" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#2255cc" text-anchor="start" style="">Data path:   CPU -> Cache -> Interconnect -> Memory  |  DMA/Display -> Interconnect -> Memory</text>
+<text x="60" y="673" font-family="Helvetica,Arial,sans-serif" font-size="10" fill="#cc5522" text-anchor="start" style="">Control path:  CPU -> Cache -> Interconnect -> DMA MMIO / Display MMIO</text>
+</svg>
