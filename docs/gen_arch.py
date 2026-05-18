@@ -1,170 +1,97 @@
 #!/usr/bin/env python3
-"""Generate SoC architecture diagram as clean HTML."""
-import webbrowser, os
+"""Generate SoC architecture diagram — clean HTML table layout."""
+CSS = "body{font:11px Menlo,Monaco,monospace;margin:24px;color:#222;background:#fff} h2{font-size:14px;margin:0 0 12px} table{border-collapse:collapse;margin-bottom:16px} td{border:1px solid #ddd;padding:6px 12px;vertical-align:middle;text-align:center;white-space:nowrap} .hdr{font-weight:bold;font-size:11px} .i{background:#ede0f2;border:1.5px solid #9673a6} .t{background:#fde0dc;border:1.5px solid #b85450} .m{background:#dae8fc;border:1.5px solid #6c8ebf} .c{background:#d5e8d4;border:1.5px solid #82b366} .b{background:#fff2cc;border:1.5px solid #d6b656} .mm{background:#f0f0f0;border:1.5px solid #888} .d{background:#ffe6cc;border:1.5px solid #d79b00} .p{background:#e0e8d0;border:1.5px solid #8a6a9e} .ba{font-weight:bold;color:#2255cc} .oa{font-weight:bold;color:#cc5522} .ga{font-weight:bold;color:#008800} .na{color:#999;font-size:9px}"
 
-HTML = '''
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>RISC-V SoC Architecture — Socket Topology</title>
-<style>
-body { font:13px Helvetica,Arial,sans-serif; background:#fff; color:#222; margin:20px; }
-h2 { font-size:16px; margin:0 0 16px 0; }
-.row { display:flex; gap:6px; margin-bottom:6px; }
-.mod { border:1.5px solid #888; border-radius:6px; overflow:hidden; min-width:130px; }
-.mod .head { font-weight:bold; text-align:center; padding:4px 10px; font-size:11px; border-bottom:1px solid; }
-.mod .cell { padding:4px 10px; text-align:center; font-size:10px; line-height:1.3; min-height:28px;
-             display:flex; align-items:center; justify-content:center; }
+HTML = f'''<!DOCTYPE html><html><head><meta charset="UTF-8"><title>SoC Architecture</title><style>{CSS}</style></head><body>
+<h2>RISC-V SoC TLM-2.0 Architecture</h2>
 
-.cpu .head { background:#dae8fc; border-color:#6c8ebf; }
-.cache .head { background:#d5e8d4; border-color:#82b366; }
-.ic .head { background:#fff2cc; border-color:#d6b656; }
-.mem .head { background:#f5f5f5; border-color:#666; }
-.dma .head { background:#ffe6cc; border-color:#d79b00; }
-.disp .head { background:#d5e8d4; border-color:#9673a6; }
-
-.init { background:#e1d5e7; }
-.targ { background:#f8cecc; }
-
-.arr { display:flex; align-items:center; justify-content:center; min-width:50px;
-       font-size:10px; font-weight:bold; flex-direction:column; }
-.arr-h { flex-direction:row; min-width:40px; }
-.arr-v { flex-direction:column; }
-
-.arr span { font-size:8px; font-weight:normal; }
-
-.tbar { display:flex; align-items:center; gap:4px; margin:4px 0; }
-.tbar .chip { display:inline-block; width:12px; height:12px; border-radius:2px; border:1px solid; flex-shrink:0; }
-.tbar .chip.i { background:#e1d5e7; border-color:#9673a6; }
-.tbar .chip.t { background:#f8cecc; border-color:#b85450; }
-
-.legend { border:1px solid #ccc; border-radius:6px; padding:10px; margin-top:16px; display:inline-block; }
-.legend td { padding:2px 8px; font-size:10px; }
-.addr { border:1px solid #ccc; border-radius:6px; padding:10px; margin-top:6px; display:inline-block; margin-left:12px; }
-.addr td { padding:1px 8px; font-size:10px; }
-
-.blue { color:#2255cc; }
-.orange { color:#cc5522; }
-.green { color:#00aa00; }
-
-.section-label { font-size:11px; font-weight:bold; margin:12px 0 4px 0; }
-</style>
-</head>
-<body>
-
-<h2>RISC-V SoC Architecture — Socket Topology</h2>
-
-<div class="section-label blue">DATA PATH (initiator side)</div>
-<div class="row">
-  <!-- CPU -->
-  <div class="mod cpu">
-    <div class="head">CPU</div>
-    <div class="cell init">instr_socket<br><small>(simple_initiator)</small></div>
-    <div class="cell init">data_socket<br><small>(simple_initiator)</small></div>
-  </div>
-
-  <div class="arr arr-h">
-    <span>fetch</span>
-    <span style="font-size:16px">&#8594;</span>
-    <span>load/store</span>
-  </div>
-
-  <!-- Cache -->
-  <div class="mod cache">
-    <div class="head">Cache (unified I/D)</div>
-    <div class="cell targ">target_socket<br><small>(multi_passthrough_target)</small></div>
-    <div class="cell init">initiator_socket<br><small>(simple_initiator)</small></div>
-  </div>
-
-  <div class="arr arr-h"><span style="font-size:16px">&#8594;</span></div>
-
-  <!-- Interconnect -->
-  <div class="mod ic">
-    <div class="head">Interconnect</div>
-    <div class="cell targ">target_socket<br><small>(multi_passthrough_target)</small></div>
-    <div style="padding:3px 6px; font-size:9px; color:#666; border-bottom:1px dashed #ccc;">
-      <b>b_transport:</b> iterate regions[]<br>
-      addr in [base,base+size) &#8594; forward<br>
-      else &#8594; ADDRESS_ERROR
-    </div>
-  </div>
-</div>
-
-<div class="section-label orange">CONTROL PATH (MMIO side — Interconnect outputs)</div>
-<div class="row">
-  <div class="mod ic" style="width:200px">
-    <div class="head">Interconnect (outputs)</div>
-    <div class="cell init">mem_socket<br><small>(simple_initiator)</small></div>
-    <div class="cell init">dma_mmio_socket<br><small>(simple_initiator)</small></div>
-    <div class="cell init">display_mmio_socket<br><small>(simple_initiator)</small></div>
-  </div>
-
-  <div class="arr arr-v">
-    <div style="font-size:10px">0x80000000 &#8594;</div>
-    <div style="font-size:10px;margin-top:12px">0x10000000 &#8594;</div>
-    <div style="font-size:10px;margin-top:12px">0x10001000 &#8594;</div>
-  </div>
-
-  <!-- Targets -->
-  <div class="mod mem">
-    <div class="head">Memory (8MB)</div>
-    <div class="cell targ">socket<br><small>(simple_target)</small></div>
-  </div>
-
-  <div class="mod dma">
-    <div class="head">DMA</div>
-    <div class="cell targ">target_socket MMIO<br><small>(simple_target)</small></div>
-    <div style="padding:3px 8px;font-size:9px;background:#fff;text-align:center">
-      SRC_ADDR, DST_ADDR<br>SIZE, CTRL[0]=start</div>
-    <div class="cell init">initiator_socket<br><small>(simple_initiator)</small></div>
-  </div>
-
-  <div class="mod disp">
-    <div class="head">Display</div>
-    <div class="cell targ">target_socket MMIO<br><small>(simple_target)</small></div>
-    <div style="padding:3px 8px;font-size:9px;background:#fff;text-align:center">
-      FB_ADDR, WIDTH<br>HEIGHT, CTRL[0]=enable</div>
-    <div class="cell init">initiator_socket<br><small>(simple_initiator)</small></div>
-  </div>
-</div>
-
-<div class="section-label green">DMA / Display initiators &#8594; Interconnect</div>
-<div class="row">
-  <div class="arr arr-h" style="min-width:100px">
-    <span>data transfer</span>
-    <span style="font-size:16px">&#8592;</span>
-  </div>
-  <div style="padding:6px 10px;font-size:10px">
-    DMA.initiator_socket &#8594; Interconnect.target_socket<br>
-    Display.initiator_socket &#8594; Interconnect.target_socket
-  </div>
-</div>
-
-<table class="addr"><tr><td colspan="2"><b>Address Map</b></td></tr>
-<tr><td><code>0x00000000 - 0x007FFFFF</code></td><td>&#8594; Memory (low alias)</td></tr>
-<tr><td><code>0x80000000 - 0x807FFFFF</code></td><td>&#8594; Memory</td></tr>
-<tr><td><code>0x10000000 - 0x10000FFF</code></td><td>&#8594; DMA MMIO</td></tr>
-<tr><td><code>0x10001000 - 0x10001FFF</code></td><td>&#8594; Display MMIO</td></tr>
+<table>
+<tr>
+  <td class="hdr m">CPU</td><td></td>
+  <td class="hdr c">Cache</td><td></td>
+  <td class="hdr b">Interconnect</td><td></td>
+  <td class="hdr mm">Memory</td><td></td>
+  <td class="hdr d">DMA</td><td></td>
+  <td class="hdr p">Display</td>
+</tr>
+<tr>
+  <td class="i">instr_socket<br><span class="na">simple_initiator</span></td>
+  <td class="ba">fetch &#8594;</td>
+  <td class="t" rowspan="2">target_socket<br><span class="na">multi_<br>passthrough_<br>target</span></td>
+  <td></td>
+  <td class="t" rowspan="2">target_socket<br><span class="na">multi_<br>passthrough_<br>target</span></td>
+  <td class="ba">&#8594;</td>
+  <td class="t" rowspan="2">socket<br><span class="na">simple_target</span></td>
+  <td></td>
+  <td class="t">target_socket MMIO<br><span class="na">simple_target</span></td>
+  <td></td>
+  <td class="t">target_socket MMIO<br><span class="na">simple_target</span></td>
+</tr>
+<tr>
+  <td class="i">data_socket<br><span class="na">simple_initiator</span></td>
+  <td class="ba">load/store &#8594;</td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td></td><td></td>
+  <td class="i">initiator_socket<br><span class="na">simple_initiator</span></td>
+  <td class="ba">&#8594;</td>
+  <td class="b" rowspan="5">regions[]<br>route by addr<br><span class="na">b_transport</span></td>
+  <td class="oa">&#8594; 0x80000000</td>
+  <td></td><td></td><td></td><td></td>
+</tr>
+<tr>
+  <td></td><td></td><td></td><td></td>
+  <td class="oa">&#8594; 0x10000000</td>
+  <td></td>
+  <td class="t">regs: SRC,DST<br>SIZE,CTRL</td>
+  <td></td><td></td>
+</tr>
+<tr>
+  <td></td><td></td><td></td><td></td>
+  <td class="oa">&#8594; 0x10001000</td>
+  <td></td><td></td><td></td>
+  <td class="t">regs: FB_ADDR<br>W,H,CTRL</td>
+</tr>
+<tr>
+  <td></td><td></td><td></td>
+  <td class="ga">DMA.init &#8592;</td>
+  <td class="ga">&#8592;</td>
+  <td></td>
+  <td class="i">initiator_socket<br><span class="na">simple_initiator</span></td>
+  <td></td><td></td>
+</tr>
+<tr>
+  <td></td><td></td><td></td>
+  <td class="ga">Disp.init &#8592;</td>
+  <td class="ga">&#8592;</td>
+  <td></td><td></td><td></td>
+  <td class="i">initiator_socket<br><span class="na">simple_initiator</span></td>
+</tr>
 </table>
 
-<table class="legend">
-<tr><td><b>Socket Types</b></td></tr>
-<tr><td><span class="chip i"></span> <b>simple_initiator</b> = master, issues b_transport</td></tr>
-<tr><td><span class="chip t"></span> <b>simple_target / multi_passthrough_target</b> = slave, receives b_transport</td></tr>
-<tr><td><span style="color:#2255cc">&#8594;</span> <span class="blue">blue = DATA path</span></td>
-    <td><span style="color:#cc5522">&#8594;</span> <span class="orange">orange = CONTROL path</span></td>
-    <td><span style="color:#00aa00">&#8592;</span> <span class="green">green = device initiator</span></td></tr>
+<table>
+<tr><td class="hdr" colspan="3">Socket Types</td></tr>
+<tr>
+  <td class="i">purple = simple_initiator</td>
+  <td>master, calls b_transport</td>
+</tr>
+<tr>
+  <td class="t">red = simple_target / multi_passthrough_target</td>
+  <td>slave, receives b_transport</td>
+</tr>
+<tr><td class="hdr" colspan="3">Arrow Colors</td></tr>
+<tr><td class="ba">blue arrow = DATA path</td></tr>
+<tr><td class="oa">orange arrow = CONTROL path (MMIO)</td></tr>
+<tr><td class="ga">green arrow = device initiator path</td></tr>
 </table>
+</body></html>'''
 
-</body>
-</html>
-'''
-
-with open("docs/architecture.html", "w") as f:
-    f.write(HTML)
-
+with open("docs/architecture.html","w") as f: f.write(HTML)
 print("Generated docs/architecture.html")
-
-# Open in browser
-webbrowser.open("file://" + os.path.abspath("docs/architecture.html"))
