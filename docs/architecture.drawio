@@ -4,8 +4,6 @@
       <root>
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
-
-        <!-- CPU -->
         <mxCell id="cpu" value="CPU (core.h)" style="swimlane;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1" vertex="1" parent="1">
           <mxGeometry x="40" y="200" width="180" height="150"/>
         </mxCell>
@@ -15,8 +13,6 @@
         <mxCell id="cpu_data" value="data_socket&#xa;(simple_initiator)" style="rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10" vertex="1" parent="cpu">
           <mxGeometry x="10" y="90" width="160" height="35"/>
         </mxCell>
-
-        <!-- Cache -->
         <mxCell id="cache" value="Cache (unified I/D)" style="swimlane;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1" vertex="1" parent="1">
           <mxGeometry x="320" y="200" width="180" height="150"/>
         </mxCell>
@@ -26,8 +22,6 @@
         <mxCell id="cache_init" value="initiator_socket&#xa;(simple_initiator)" style="rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10" vertex="1" parent="cache">
           <mxGeometry x="10" y="90" width="160" height="35"/>
         </mxCell>
-
-        <!-- Interconnect -->
         <mxCell id="interconnect" value="Interconnect" style="swimlane;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1" vertex="1" parent="1">
           <mxGeometry x="600" y="120" width="220" height="380"/>
         </mxCell>
@@ -46,16 +40,12 @@
         <mxCell id="ic_routing" value="b_transport:&#xa;  iterate regions[]&#xa;  forward by address" style="rounded=0;fillColor=#ffffff;strokeColor=#999999;fontSize=9;align=left;spacingLeft=5" vertex="1" parent="interconnect">
           <mxGeometry x="10" y="300" width="200" height="65"/>
         </mxCell>
-
-        <!-- Memory -->
         <mxCell id="memory" value="Memory (8MB)" style="swimlane;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1" vertex="1" parent="1">
           <mxGeometry x="920" y="120" width="180" height="100"/>
         </mxCell>
         <mxCell id="mem_target" value="socket&#xa;(simple_target)" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10" vertex="1" parent="memory">
           <mxGeometry x="10" y="40" width="160" height="35"/>
         </mxCell>
-
-        <!-- DMA -->
         <mxCell id="dma" value="DMA" style="swimlane;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1" vertex="1" parent="1">
           <mxGeometry x="920" y="270" width="180" height="150"/>
         </mxCell>
@@ -65,8 +55,6 @@
         <mxCell id="dma_init" value="initiator_socket&#xa;(simple_initiator)" style="rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10" vertex="1" parent="dma">
           <mxGeometry x="10" y="90" width="160" height="35"/>
         </mxCell>
-
-        <!-- Display -->
         <mxCell id="display" value="Display" style="swimlane;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1" vertex="1" parent="1">
           <mxGeometry x="920" y="460" width="180" height="150"/>
         </mxCell>
@@ -76,8 +64,6 @@
         <mxCell id="disp_init" value="initiator_socket&#xa;(simple_initiator)" style="rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10" vertex="1" parent="display">
           <mxGeometry x="10" y="90" width="160" height="35"/>
         </mxCell>
-
-        <!-- DATA PATH: CPU → Cache → Interconnect -->
         <mxCell id="edge_cpu_cache" value="" style="endArrow=classic;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0" edge="1" parent="1" source="cpu_instr" target="cache_target">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
@@ -87,33 +73,21 @@
         <mxCell id="edge_cache_ic" value="" style="endArrow=classic;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0" edge="1" parent="1" source="cache_init" target="ic_target">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-
-        <!-- DATA PATH: DMA → Interconnect -->
         <mxCell id="edge_dma_ic" value="" style="endArrow=classic;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;curved=1" edge="1" parent="1" source="dma_init" target="ic_target">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-
-        <!-- DATA PATH: Display → Interconnect -->
         <mxCell id="edge_disp_ic" value="" style="endArrow=classic;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;curved=1" edge="1" parent="1" source="disp_init" target="ic_target">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-
-        <!-- CONTROL PATH: Interconnect → Memory -->
         <mxCell id="edge_ic_mem" value="0x80000000&#xa;DATA" style="endArrow=classic;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0" edge="1" parent="1" source="ic_mem" target="mem_target">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-
-        <!-- CONTROL PATH: Interconnect → DMA MMIO -->
         <mxCell id="edge_ic_dma" value="0x10000000&#xa;MMIO" style="endArrow=classic;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0" edge="1" parent="1" source="ic_dma" target="dma_target">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-
-        <!-- CONTROL PATH: Interconnect → Display MMIO -->
         <mxCell id="edge_ic_disp" value="0x10001000&#xa;MMIO" style="endArrow=classic;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0" edge="1" parent="1" source="ic_disp" target="disp_target">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-
-        <!-- Legend -->
         <mxCell id="legend" value="Legend" style="swimlane;fillColor=#ffffff;strokeColor=#000000" vertex="1" parent="1">
           <mxGeometry x="40" y="460" width="220" height="100"/>
         </mxCell>
@@ -123,8 +97,6 @@
         <mxCell id="leg_target" value="simple_target_socket" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10" vertex="1" parent="legend">
           <mxGeometry x="10" y="55" width="200" height="25"/>
         </mxCell>
-
-        <!-- Address Map -->
         <mxCell id="addr_map" value="Address Map" style="swimlane;fillColor=#ffffff;strokeColor=#000000;fontStyle=1" vertex="1" parent="1">
           <mxGeometry x="40" y="580" width="280" height="140"/>
         </mxCell>
@@ -140,12 +112,9 @@
         <mxCell id="addr4" value="0x10001000 - 0x10001FFF  →  Display MMIO" style="text;fontSize=10;align=left" vertex="1" parent="addr_map">
           <mxGeometry x="10" y="100" width="260" height="20"/>
         </mxCell>
-
-        <!-- Edge labels summarized -->
         <mxCell id="note" value="Purple = initiator (master)&#xa;Red = target (slave)" style="text;fontSize=9;align=left" vertex="1" parent="1">
           <mxGeometry x="320" y="460" width="160" height="40"/>
         </mxCell>
-
       </root>
     </mxGraphModel>
   </diagram>
