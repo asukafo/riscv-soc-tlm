@@ -12,6 +12,8 @@
 namespace riscv_soc_tlm
 {
 
+class CLINT;  // forward declaration
+
 class CPU : public sc_core::sc_module
 {
 public:
@@ -21,11 +23,14 @@ public:
 
     CPU(sc_core::sc_module_name name, uint32_t start_pc);
 
+    void setCLINT(CLINT* clint) { m_clint = clint; }
+
 private:
     Executor executor;
 
     void CPU_thread();
     uint32_t fetchInstruction();
+    void checkInterrupts();
 
     // Callbacks for Executor — memory access
     static uint32_t memRead(void* ctx, uint64_t addr, int size);
@@ -38,6 +43,12 @@ private:
     static void regSetPC(void* ctx, uint32_t pc);
     static void regIncPC(void* ctx);
     static void regDump(void* ctx);
+
+    // Callbacks for Executor — CSR access
+    static uint32_t csrRead(void* ctx, uint32_t addr);
+    static void csrWrite(void* ctx, uint32_t addr, uint32_t value);
+
+    CLINT* m_clint;
 };
 
 }  // namespace riscv_soc_tlm

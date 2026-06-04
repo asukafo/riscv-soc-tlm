@@ -101,10 +101,13 @@ public:
     using SetPCFn = void (*)(void*, uint32_t);
     using IncPCFn = void (*)(void*);
     using DumpFn = void (*)(void*);
+    using CSRReadFn = uint32_t (*)(void*, uint32_t);
+    using CSRWriteFn = void (*)(void*, uint32_t, uint32_t);
 
     Executor()
         : mem_read(nullptr), mem_write(nullptr), reg_read(nullptr), reg_write(nullptr),
-          get_pc(nullptr), set_pc(nullptr), inc_pc(nullptr), dump(nullptr), ctx(nullptr)
+          get_pc(nullptr), set_pc(nullptr), inc_pc(nullptr), dump(nullptr),
+          csr_read(nullptr), csr_write(nullptr), ctx(nullptr)
     {
     }
 
@@ -113,6 +116,7 @@ public:
     void setReg(RegReadFn r, RegWriteFn w) { reg_read = r; reg_write = w; }
     void setPC(GetPCFn g, SetPCFn s, IncPCFn i) { get_pc = g; set_pc = s; inc_pc = i; }
     void setDump(DumpFn d) { dump = d; }
+    void setCSR(CSRReadFn r, CSRWriteFn w) { csr_read = r; csr_write = w; }
 
     bool execute(uint32_t instr_raw);
 
@@ -125,6 +129,8 @@ private:
     SetPCFn set_pc;
     IncPCFn inc_pc;
     DumpFn dump;
+    CSRReadFn csr_read;
+    CSRWriteFn csr_write;
     void* ctx;
 
     void LUI(const Instruction& i);
@@ -172,6 +178,15 @@ private:
 
     void FENCE(const Instruction& i);
     bool ECALL(const Instruction& i);
+
+    // CSR instructions
+    bool CSRRW(const Instruction& i);
+    bool CSRRS(const Instruction& i);
+    bool CSRRC(const Instruction& i);
+    bool CSRRWI(const Instruction& i);
+    bool CSRRSI(const Instruction& i);
+    bool CSRRCI(const Instruction& i);
+    bool MRET(const Instruction& i);
 };
 
 // ─── Immediate-type instructions ──────────────────────────────────────
@@ -401,6 +416,93 @@ inline void Executor::FENCE(const Instruction& /*i*/)
     /* NOP */
 }
 
+// ─── CSR instructions ─────────────────────────────────────────────────
+
+inline bool Executor::CSRRW(const Instruction& i)
+{
+    uint32_t csr_addr = (i.getInstr() >> 20) & 0xFFF;
+    uint32_t old_val = csr_read(ctx, csr_addr);
+    csr_write(ctx, csr_addr, reg_read(ctx, i.rs1()));
+    if (i.rd() != 0)
+        reg_write(ctx, i.rd(), old_val);
+    return false;
+}
+
+inline bool Executor::CSRRS(const Instruction& i)
+{
+    uint32_t csr_addr = (i.getInstr() >> 20) & 0xFFF;
+    uint32_t old_val = csr_read(ctx, csr_addr);
+    if (i.rs1() != 0)
+        csr_write(ctx, csr_addr, old_val | reg_read(ctx, i.rs1()));
+    if (i.rd() != 0)
+        reg_write(ctx, i.rd(), old_val);
+    return false;
+}
+
+inline bool Executor::CSRRC(const Instruction& i)
+{
+    uint32_t csr_addr = (i.getInstr() >> 20) & 0xFFF;
+    uint32_t old_val = csr_read(ctx, csr_addr);
+    if (i.rs1() != 0)
+        csr_write(ctx, csr_addr, old_val & ~reg_read(ctx, i.rs1()));
+    if (i.rd() != 0)
+        reg_write(ctx, i.rd(), old_val);
+    return false;
+}
+
+inline bool Executor::CSRRWI(const Instruction& i)
+{
+    uint32_t csr_addr = (i.getInstr() >> 20) & 0xFFF;
+    uint32_t zimm = i.rs1();  // 5-bit zero-extended immediate
+    uint32_t old_val = csr_read(ctx, csr_addr);
+    csr_write(ctx, csr_addr, zimm);
+    if (i.rd() != 0)
+        reg_write(ctx, i.rd(), old_val);
+    return false;
+}
+
+inline bool Executor::CSRRSI(const Instruction& i)
+{
+    uint32_t csr_addr = (i.getInstr() >> 20) & 0xFFF;
+    uint32_t zimm = i.rs1();
+    uint32_t old_val = csr_read(ctx, csr_addr);
+    if (zimm != 0)
+        csr_write(ctx, csr_addr, old_val | zimm);
+    if (i.rd() != 0)
+        reg_write(ctx, i.rd(), old_val);
+    return false;
+}
+
+inline bool Executor::CSRRCI(const Instruction& i)
+{
+    uint32_t csr_addr = (i.getInstr() >> 20) & 0xFFF;
+    uint32_t zimm = i.rs1();
+    uint32_t old_val = csr_read(ctx, csr_addr);
+    if (zimm != 0)
+        csr_write(ctx, csr_addr, old_val & ~zimm);
+    if (i.rd() != 0)
+        reg_write(ctx, i.rd(), old_val);
+    return false;
+}
+
+inline bool Executor::MRET(const Instruction& /*i*/)
+{
+    // Read mepc for the return address
+    uint32_t new_pc = csr_read(ctx, 0x341);
+
+    // Read and update mstatus: MIE ← MPIE, MPIE ← 1
+    uint32_t ms = csr_read(ctx, 0x300);
+    bool mpie = (ms >> 7) & 1;
+    ms &= ~((1u << 3) | (1u << 7));   // clear MIE, MPIE
+    if (mpie)
+        ms |= (1u << 3);               // MIE = old MPIE
+    ms |= (1u << 7);                    // MPIE = 1
+    csr_write(ctx, 0x300, ms);
+
+    set_pc(ctx, new_pc);
+    return true;
+}
+
 inline bool Executor::ECALL(const Instruction& /*i*/)
 {
     std::cout << "\n=== ECALL: simulation stopped ===" << std::endl;
@@ -570,11 +672,23 @@ inline bool Executor::execute(uint32_t instr_raw)
             FENCE(inst);
             return false;
 
-        case 0b1110011:
-            if (inst.funct3() == 0b000)
+        case 0b1110011:  // SYSTEM
+            switch (inst.funct3())
             {
-                if (inst.imm_I() == 0)
-                    return ECALL(inst);
+                case 0b000: {
+                    uint32_t op12 = (inst.getInstr() >> 20) & 0xFFF;
+                    if (op12 == 0x000)
+                        return ECALL(inst);   // ECALL
+                    if (op12 == 0x302)
+                        return MRET(inst);    // MRET
+                    break;
+                }
+                case 0b001: return CSRRW(inst);
+                case 0b010: return CSRRS(inst);
+                case 0b011: return CSRRC(inst);
+                case 0b101: return CSRRWI(inst);
+                case 0b110: return CSRRSI(inst);
+                case 0b111: return CSRRCI(inst);
             }
             break;
     }

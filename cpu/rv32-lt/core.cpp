@@ -1,4 +1,5 @@
 #include "cpu/rv32-lt/core.h"
+#include "periph/clint/clint.h"
 
 #include <iostream>
 
@@ -11,7 +12,8 @@ CPU::CPU(sc_core::sc_module_name name, uint32_t start_pc)
     : sc_core::sc_module(name),
       instr_socket("instr_socket"),
       data_socket("data_socket"),
-      executor()
+      executor(),
+      m_clint(nullptr)
 {
     regs.setPC(start_pc);
 
@@ -20,6 +22,7 @@ CPU::CPU(sc_core::sc_module_name name, uint32_t start_pc)
     executor.setReg(&CPU::regRead, &CPU::regWrite);
     executor.setPC(&CPU::regGetPC, &CPU::regSetPC, &CPU::regIncPC);
     executor.setDump(&CPU::regDump);
+    executor.setCSR(&CPU::csrRead, &CPU::csrWrite);
 
     SC_THREAD(CPU_thread);
 }
@@ -28,6 +31,8 @@ void CPU::CPU_thread()
 {
     while (true)
     {
+        checkInterrupts();
+
         uint32_t instr_raw = fetchInstruction();
         bool pc_updated = executor.execute(instr_raw);
 
@@ -38,6 +43,51 @@ void CPU::CPU_thread()
 
         sc_core::wait(10, sc_core::SC_NS);
     }
+}
+
+void CPU::checkInterrupts()
+{
+    if (m_clint == nullptr)
+        return;
+
+    // Sync external interrupt pending from CLINT
+    uint32_t ext_pending = m_clint->interrupt_pending();
+    regs.csr.update_external_ip(ext_pending);
+
+    // Check if any enabled interrupt is pending and global MIE is set
+    uint32_t mip = regs.csr.read(CSR::ADDR_MIP);
+    uint32_t mie = regs.csr.read(CSR::ADDR_MIE);
+    uint32_t mstatus = regs.csr.read(CSR::ADDR_MSTATUS);
+
+    if (!(mstatus & CSR::MSTATUS_MIE))
+        return;
+
+    uint32_t active = mip & mie;
+    if (active == 0)
+        return;
+
+    // Priority: MEI > MSI > MTI
+    uint32_t cause;
+    if (active & CSR::MEIE)
+        cause = CSR::IRQ_MEI;
+    else if (active & CSR::MSIP)
+        cause = CSR::IRQ_MSI;
+    else if (active & CSR::MTIP)
+        cause = CSR::IRQ_MTI;
+    else
+        return;
+
+    // Take the trap
+    regs.csr.take_trap(regs.getPC(), cause, true);
+
+    // Set PC to trap handler from mtvec
+    uint32_t mtvec = regs.csr.read(CSR::ADDR_MTVEC);
+    uint32_t mode = mtvec & 0x3;
+    uint32_t base = mtvec & ~0x3u;
+    if (mode == 1)  // vectored
+        regs.setPC(base + 4 * (cause & 0x1F));
+    else  // direct
+        regs.setPC(base);
 }
 
 uint32_t CPU::fetchInstruction()
@@ -144,6 +194,18 @@ void CPU::regIncPC(void* ctx)
 void CPU::regDump(void* ctx)
 {
     static_cast<CPU*>(ctx)->regs.dump();
+}
+
+// ─── CSR callbacks ──────────────────────────────────────────────────
+
+uint32_t CPU::csrRead(void* ctx, uint32_t addr)
+{
+    return static_cast<CPU*>(ctx)->regs.csr.read(addr);
+}
+
+void CPU::csrWrite(void* ctx, uint32_t addr, uint32_t value)
+{
+    static_cast<CPU*>(ctx)->regs.csr.write(addr, value);
 }
 
 }  // namespace riscv_soc_tlm

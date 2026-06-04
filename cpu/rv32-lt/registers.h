@@ -6,6 +6,8 @@
 #include <iomanip>
 #include <iostream>
 
+#include "cpu/rv32-lt/csr.h"
+
 // RISC-V RV32I register file (32 x 32-bit, x0 hardwired to zero).
 //
 // Register  ABI Name  Description
@@ -30,6 +32,8 @@ namespace riscv_soc_tlm
 class Registers
 {
 public:
+    CSR csr;  // machine-mode control and status registers
+
     Registers()
     {
         regs.fill(0);

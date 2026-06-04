@@ -8,6 +8,7 @@
 #include "periph/dma/dma.h"
 #include "periph/display/display.h"
 #include "periph/fpu/fpu.h"
+#include "periph/clint/clint.h"
 
 using namespace riscv_soc_tlm;
 
@@ -63,6 +64,11 @@ int sc_main(int argc, char* argv[])
     FPU fpu("fpu");
     interconnect.fpu_mmio_socket.bind(fpu.target_socket);
 
+    // ── CLINT ──────────────────────────────────────────────────────────
+    CLINT clint("clint");
+    interconnect.clint_socket.bind(clint.target_socket);
+    cpu.setCLINT(&clint);
+
     // ── Topology 2: Separated I-Cache + D-Cache ───────────────────────
     // Comment out Topology 1 and uncomment this block to switch:
     //
@@ -80,6 +86,7 @@ int sc_main(int argc, char* argv[])
     interconnect.map(0x10000000, 0x1000, interconnect.dma_mmio_socket);
     interconnect.map(0x10001000, 0x1000, interconnect.display_mmio_socket);
     interconnect.map(0x10002000, 0x1000, interconnect.fpu_mmio_socket);
+    interconnect.map(0x02000000, 0x10000, interconnect.clint_socket);
 
     interconnect.mem_socket.bind(memory.socket);
 
