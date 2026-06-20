@@ -120,6 +120,9 @@ public:
 
     bool execute(uint32_t instr_raw);
 
+    // Set to true when ECALL calls sc_stop() — checked by CPU thread
+    bool stopped() const { return m_stopped; }
+
 private:
     MemReadFn mem_read;
     MemWriteFn mem_write;
@@ -132,6 +135,7 @@ private:
     CSRReadFn csr_read;
     CSRWriteFn csr_write;
     void* ctx;
+    bool m_stopped = false;  // set by ECALL, checked by CPU thread
 
     void LUI(const Instruction& i);
     void AUIPC(const Instruction& i);
@@ -507,6 +511,7 @@ inline bool Executor::ECALL(const Instruction& /*i*/)
 {
     std::cout << "\n=== ECALL: simulation stopped ===" << std::endl;
     dump(ctx);
+    m_stopped = true;   // signal CPU thread to exit
     sc_core::sc_stop();
     return false;
 }

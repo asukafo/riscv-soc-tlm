@@ -67,6 +67,8 @@ FPU::FPU(sc_core::sc_module_name name)
       m_ctrl(0)
 {
     target_socket.register_b_transport(this, &FPU::b_transport);
+    // Clause 11.4: debug transport for MMIO peek/poke
+    target_socket.register_transport_dbg(this, &FPU::transport_dbg);
     SC_THREAD(compute_thread);
 }
 
@@ -76,7 +78,8 @@ void FPU::b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
     unsigned char* data = trans.get_data_ptr();
     unsigned int len = trans.get_data_length();
 
-    delay = sc_core::SC_ZERO_TIME;
+    // Clause 16.4: accumulate, don't overwrite (quantum keeper)
+    delay += sc_core::sc_time(1, sc_core::SC_NS);
 
     if (trans.get_command() == tlm::TLM_READ_COMMAND)
     {
@@ -112,6 +115,14 @@ void FPU::b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
         }
         trans.set_response_status(tlm::TLM_OK_RESPONSE);
     }
+}
+
+// Clause 11.4: debug transport (no time advance)
+unsigned int FPU::transport_dbg(tlm::tlm_generic_payload& trans)
+{
+    sc_core::sc_time t = sc_core::SC_ZERO_TIME;
+    b_transport(trans, t);
+    return trans.get_data_length();
 }
 
 void FPU::compute_thread()

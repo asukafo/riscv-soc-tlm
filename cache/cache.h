@@ -32,7 +32,11 @@ public:
 
     uint64_t hits() const { return m_hits; }
     uint64_t misses() const { return m_misses; }
+    uint64_t mmio_bypass() const { return m_mmio_bypass; }
     void reset_stats();
+
+    // Add an MMIO range to bypass (start, end inclusive)
+    void add_mmio_bypass(uint64_t start, uint64_t end);
 
 private:
     struct Line
@@ -47,9 +51,25 @@ private:
     std::vector<std::vector<Line>> m_sets; // sets[set_index][way]
     uint64_t m_hits;
     uint64_t m_misses;
+    uint64_t m_mmio_bypass;  // count of accesses bypassed (MMIO)
 
+    // MMIO bypass ranges: {start, end} pairs (inclusive)
+    std::vector<std::pair<uint64_t, uint64_t>> m_mmio_ranges;
+
+    bool is_mmio(uint64_t addr) const;
+
+    // LT path (blocking, cached)
     void b_transport(int id, tlm::tlm_generic_payload& trans, sc_core::sc_time& delay);
 
+    // AT path (non-blocking, passthrough without caching)
+    tlm::tlm_sync_enum nb_transport_fw(int id, tlm::tlm_generic_payload& trans,
+                                        tlm::tlm_phase& phase,
+                                        sc_core::sc_time& delay);
+
+    // Debug transport — Clause 11.4
+    unsigned int transport_dbg(int id, tlm::tlm_generic_payload& trans);
+
+    // Internal LT helpers
     uint32_t set_index(uint64_t addr) const;
     uint32_t tag(uint64_t addr) const;
     uint32_t line_offset(uint64_t addr) const;

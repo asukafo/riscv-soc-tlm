@@ -2,7 +2,7 @@ CROSS = riscv64-elf
 CC    = $(CROSS)-gcc
 CFLAGS = -march=rv32i -mabi=ilp32 -O1 -nostdlib -nostartfiles -ffreestanding -Wall
 
-all: test_demo.elf
+all: test_demo.elf test_dma.elf
 
 start.o: start.S
 	$(CC) $(CFLAGS) -c start.S -o start.o

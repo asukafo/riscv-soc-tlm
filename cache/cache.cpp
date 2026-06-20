@@ -13,9 +13,15 @@ Cache::Cache(sc_core::sc_module_name name, const CacheConfig& config)
       initiator_socket("initiator_socket"),
       m_config(config),
       m_hits(0),
-      m_misses(0)
+      m_misses(0),
+      m_mmio_bypass(0)
 {
+    // LT path
     target_socket.register_b_transport(this, &Cache::b_transport);
+    // AT path — passthrough without caching
+    target_socket.register_nb_transport_fw(this, &Cache::nb_transport_fw);
+    // Debug — Clause 11.4
+    target_socket.register_transport_dbg(this, &Cache::transport_dbg);
 
     uint32_t nsets = config.num_sets();
     uint32_t nways = config.associativity;
@@ -38,6 +44,22 @@ void Cache::reset_stats()
 {
     m_hits = 0;
     m_misses = 0;
+    m_mmio_bypass = 0;
+}
+
+bool Cache::is_mmio(uint64_t addr) const
+{
+    for (auto& r : m_mmio_ranges)
+    {
+        if (addr >= r.first && addr <= r.second)
+            return true;
+    }
+    return false;
+}
+
+void Cache::add_mmio_bypass(uint64_t start, uint64_t end)
+{
+    m_mmio_ranges.push_back({start, end});
 }
 
 uint32_t Cache::line_offset(uint64_t addr) const
@@ -109,8 +131,8 @@ void Cache::fill_line(uint32_t set, int way, uint64_t addr)
 
     if (trans.is_response_error())
     {
-        std::cerr << "Cache fill error at addr=0x" << std::hex << line_addr << std::dec
-                  << std::endl;
+        std::cerr << "Cache fill error at addr=0x" << std::hex << line_addr
+                  << std::dec << std::endl;
         return;
     }
 
@@ -145,15 +167,29 @@ void Cache::write_hit(int set, int way, tlm::tlm_generic_payload& trans,
     initiator_socket->b_transport(trans, delay);
 }
 
-void Cache::b_transport(int /*id*/, tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
+// ═══════════════════════════════════════════════════════════════════════
+// LT path — blocking b_transport (cached)
+// ═══════════════════════════════════════════════════════════════════════
+void Cache::b_transport(int /*id*/, tlm::tlm_generic_payload& trans,
+                        sc_core::sc_time& delay)
 {
     uint64_t addr = trans.get_address();
+
+    // MMIO bypass: peripherals are not cacheable — forward directly
+    if (is_mmio(addr))
+    {
+        m_mmio_bypass++;
+        initiator_socket->b_transport(trans, delay);
+        return;
+    }
+
     uint32_t set = set_index(addr);
     uint32_t tag_val = tag(addr);
     uint32_t offset = line_offset(addr);
     int way = find_line(set, tag_val);
 
-    delay = sc_core::SC_ZERO_TIME;
+    // Clause 16.4: preserve caller's delay for quantum keeper
+    // (don't overwrite — downstream targets will add their latency)
 
     if (way >= 0 && trans.get_command() == tlm::TLM_READ_COMMAND)
     {
@@ -179,6 +215,30 @@ void Cache::b_transport(int /*id*/, tlm::tlm_generic_payload& trans, sc_core::sc
         m_misses++;
         initiator_socket->b_transport(trans, delay);
     }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// AT path — non-blocking passthrough (no caching for AT transactions)
+//
+// AT transactions bypass the cache and are forwarded directly to the
+// downstream interconnect.  The cache is write-through anyway, so
+// forwarding without caching is correct for both reads and writes.
+// ═══════════════════════════════════════════════════════════════════════
+tlm::tlm_sync_enum Cache::nb_transport_fw(int /*id*/,
+                                            tlm::tlm_generic_payload& trans,
+                                            tlm::tlm_phase& phase,
+                                            sc_core::sc_time& delay)
+{
+    // AT passthrough: forward directly to downstream without caching
+    return initiator_socket->nb_transport_fw(trans, phase, delay);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Debug transport — Clause 11.4 (passthrough)
+// ═══════════════════════════════════════════════════════════════════════
+unsigned int Cache::transport_dbg(int /*id*/, tlm::tlm_generic_payload& trans)
+{
+    return initiator_socket->transport_dbg(trans);
 }
 
 } // namespace riscv_soc_tlm

@@ -1,5 +1,6 @@
 #include "mem/memory.h"
 
+#include <cassert>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -8,50 +9,254 @@
 namespace riscv_soc_tlm
 {
 
+SC_HAS_PROCESS(Memory);
+
 static uint32_t read32LE(const unsigned char* buf)
 {
     return buf[0] | (buf[1] << 8) | (buf[2] << 16) | (buf[3] << 24);
 }
 
 Memory::Memory(sc_core::sc_module_name name)
-    : sc_core::sc_module(name), socket("socket"), base_addr(0x80000000)
+    : sc_core::sc_module(name),
+      socket("socket"),
+      read_latency(sc_core::sc_time(10, sc_core::SC_NS)),
+      write_latency(sc_core::sc_time(10, sc_core::SC_NS)),
+      tREFI(sc_core::sc_time(7800, sc_core::SC_NS)),   // 7.8 µs
+      tRFC(sc_core::sc_time(70, sc_core::SC_NS)),       // 70 ns
+      peq("peq", this, &Memory::peq_cb),
+      base_addr(0x80000000)
 {
+    // LT path
     socket.register_b_transport(this, &Memory::b_transport);
+    // AT path — Clause 15
+    socket.register_nb_transport_fw(this, &Memory::nb_transport_fw);
+    // DMI — Clause 11.3
+    socket.register_get_direct_mem_ptr(this, &Memory::get_direct_mem_ptr);
+    // Debug — Clause 11.4
+    socket.register_transport_dbg(this, &Memory::transport_dbg);
+
+    // P3.15: DRAM refresh thread
+    SC_THREAD(refresh_thread);
+
     std::memset(mem, 0, SIZE);
 }
 
+// ═══════════════════════════════════════════════════════════════════════
+// P3.15: DRAM Refresh — periodic refresh with tREFI=7.8µs, tRFC=70ns
+//
+// During refresh, new AT transactions are delayed (via nb_transport_fw
+// adding the remaining tRFC to the PEQ delay) and LT transactions add
+// the penalty to their delay parameter.
+// ═══════════════════════════════════════════════════════════════════════
+sc_core::sc_time Memory::refresh_penalty() const
+{
+    if (!m_in_refresh) return sc_core::SC_ZERO_TIME;
+
+    sc_core::sc_time elapsed = sc_core::sc_time_stamp() - m_refresh_start;
+    if (elapsed >= tRFC) return sc_core::SC_ZERO_TIME;
+
+    return tRFC - elapsed;
+}
+
+void Memory::refresh_thread()
+{
+    while (true)
+    {
+        sc_core::wait(tREFI);  // wait for next refresh interval
+
+        m_in_refresh = true;
+        m_refresh_start = sc_core::sc_time_stamp();
+
+        sc_core::wait(tRFC);   // refresh cycle
+
+        m_in_refresh = false;
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Clause 14.9/14.10: Access with streaming_width and byte_enable
+// ═══════════════════════════════════════════════════════════════════════
+void Memory::accessMem(uint64_t addr, unsigned char* ptr, uint32_t len,
+                       tlm::tlm_command cmd, uint32_t streaming_width,
+                       unsigned char* be_ptr, uint32_t be_len)
+{
+    for (uint32_t i = 0; i < len; i++)
+    {
+        // streaming_width determines address stepping (identity when == len)
+        uint64_t a = addr + (i % streaming_width);
+        uint32_t offset = toOffset(a);
+        if (offset >= SIZE) continue;
+
+        // byte_enable — if present, skip disabled byte lanes
+        bool en = !be_ptr || (be_ptr[i % be_len] == TLM_BYTE_ENABLED);
+        if (!en) continue;
+
+        if (cmd == tlm::TLM_READ_COMMAND)
+            ptr[i] = mem[offset];
+        else  // TLM_WRITE_COMMAND
+            mem[offset] = ptr[i];
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// LT path — blocking b_transport
+// ═══════════════════════════════════════════════════════════════════════
 void Memory::b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
 {
     uint64_t addr = trans.get_address();
     uint32_t offset = toOffset(addr);
     unsigned char* ptr = trans.get_data_ptr();
     uint32_t len = trans.get_data_length();
-    delay = sc_core::SC_ZERO_TIME;
+    uint32_t sw = trans.get_streaming_width();
+    unsigned char* be = trans.get_byte_enable_ptr();
+    uint32_t be_len = trans.get_byte_enable_length();
 
     if (offset + len > SIZE)
     {
-        std::cerr << "Memory access out of bounds: addr=0x" << std::hex << addr << " offset=0x"
-                  << offset << " len=" << std::dec << len << std::endl;
+        std::cerr << "Memory access out of bounds: addr=0x" << std::hex << addr
+                  << " offset=0x" << offset << " len=" << std::dec << len << std::endl;
         trans.set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
         return;
     }
 
-    if (trans.get_command() == tlm::TLM_READ_COMMAND)
-    {
-        for (uint32_t i = 0; i < len; i++)
-        {
-            ptr[i] = mem[offset + i];
-        }
-    }
-    else if (trans.get_command() == tlm::TLM_WRITE_COMMAND)
-    {
-        for (uint32_t i = 0; i < len; i++)
-        {
-            mem[offset + i] = ptr[i];
-        }
-    }
+    accessMem(addr, ptr, len, trans.get_command(), sw, be, be_len);
+
+    delay += (trans.get_command() == tlm::TLM_READ_COMMAND)
+                 ? read_latency : write_latency;
+    delay += refresh_penalty();  // P3.15: DRAM refresh stall
 
     trans.set_response_status(tlm::TLM_OK_RESPONSE);
+    trans.set_dmi_allowed(true);  // Clause 11.3: hint that DMI is available
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// AT path — non-blocking nb_transport_fw — Clause 15.2
+//
+// Called by upstream initiator. Acquires the trans and schedules
+// processing through PEQ.  Never calls wait() directly.
+// ═══════════════════════════════════════════════════════════════════════
+tlm::tlm_sync_enum Memory::nb_transport_fw(tlm::tlm_generic_payload& trans,
+                                            tlm::tlm_phase& phase,
+                                            sc_core::sc_time& delay)
+{
+    // Clause 15.2.2: validate phase legality on forward path
+    assert(phase == tlm::BEGIN_REQ || phase == tlm::END_RESP);
+
+    sc_core::sc_time t = sc_core::SC_ZERO_TIME;
+    if (phase == tlm::BEGIN_REQ)
+    {
+        // Clause 14.6: acquire refcount when taking ownership (once per trans)
+        trans.acquire();
+
+        t = (trans.get_command() == tlm::TLM_READ_COMMAND)
+                ? read_latency : write_latency;
+        t += refresh_penalty();  // P3.15: DRAM refresh stall
+    }
+
+    peq.notify(trans, phase, t);  // Clause 16.3: PEQ schedules the callback
+    return tlm::TLM_ACCEPTED;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PEQ callback — SC_METHOD, cannot call wait() — Clause 16.3
+//
+// Processes one (trans, phase) pair at a time.  For multi-phase
+// transactions, re-schedules itself via peq.notify().
+// ═══════════════════════════════════════════════════════════════════════
+void Memory::peq_cb(tlm::tlm_generic_payload& trans, const tlm::tlm_phase& phase)
+{
+    if (phase == tlm::BEGIN_REQ)
+    {
+        // ── Process the request ──────────────────────────────────
+        uint64_t addr = trans.get_address();
+        unsigned char* ptr = trans.get_data_ptr();
+        uint32_t len = trans.get_data_length();
+        uint32_t sw = trans.get_streaming_width();
+        unsigned char* be = trans.get_byte_enable_ptr();
+        uint32_t be_len = trans.get_byte_enable_length();
+
+        accessMem(addr, ptr, len, trans.get_command(), sw, be, be_len);
+        trans.set_response_status(tlm::TLM_OK_RESPONSE);
+
+        // ── Send END_REQ backward — Clause 15.2.4 ────────────────
+        sc_core::sc_time bw_delay = sc_core::SC_ZERO_TIME;
+        tlm::tlm_phase bw_phase = tlm::END_REQ;
+        tlm::tlm_sync_enum bw_rc = socket->nb_transport_bw(trans, bw_phase, bw_delay);
+
+        // Clause 15.2.2: END_REQ must be ACCEPTED or UPDATED
+        assert(bw_rc == tlm::TLM_ACCEPTED || bw_rc == tlm::TLM_UPDATED);
+
+        // ── Schedule BEGIN_RESP after access latency ─────────────
+        sc_core::sc_time resp_latency = (trans.get_command() == tlm::TLM_READ_COMMAND)
+                                            ? read_latency : write_latency;
+        peq.notify(trans, tlm::BEGIN_RESP, resp_latency);
+    }
+    else if (phase == tlm::BEGIN_RESP)
+    {
+        // ── Send BEGIN_RESP backward ─────────────────────────────
+        sc_core::sc_time bw_delay = sc_core::SC_ZERO_TIME;
+        tlm::tlm_phase bw_phase = tlm::BEGIN_RESP;
+        tlm::tlm_sync_enum bw_rc = socket->nb_transport_bw(trans, bw_phase, bw_delay);
+
+        // Clause 15.2.5: initiator returns END_RESP immediately (response exclusion)
+        // The TLM_UPDATED return carries the END_RESP phase back to us
+        if (bw_rc == tlm::TLM_UPDATED && bw_phase == tlm::END_RESP)
+        {
+            // Initiator sent END_RESP inline — process it immediately
+            peq.notify(trans, tlm::END_RESP, sc_core::SC_ZERO_TIME);
+        }
+    }
+    else if (phase == tlm::END_RESP)
+    {
+        // ── Transaction complete — release refcount ──────────────
+        trans.release();  // Clause 14.6: last release triggers SoCMM::free()
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// DMI — Clause 11.3 ────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════
+bool Memory::get_direct_mem_ptr(tlm::tlm_generic_payload& trans,
+                                 tlm::tlm_dmi& dmi_data)
+{
+    (void)trans;  // DMI grants full access regardless of transaction
+
+    dmi_data.set_dmi_ptr(mem);
+    dmi_data.set_start_address(0);       // will be translated downstream
+    dmi_data.set_end_address(SIZE - 1);
+    dmi_data.allow_read_write();
+    dmi_data.set_read_latency(read_latency);
+    dmi_data.set_write_latency(write_latency);
+
+    return true;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Debug transport — Clause 11.4 ─────────────────────────────────────────
+//
+// Direct memory access without advancing simulation time.
+// No wait() calls allowed.
+// ═══════════════════════════════════════════════════════════════════════
+unsigned int Memory::transport_dbg(tlm::tlm_generic_payload& trans)
+{
+    uint64_t addr = trans.get_address();
+    uint32_t offset = toOffset(addr);
+    unsigned char* ptr = trans.get_data_ptr();
+    uint32_t len = trans.get_data_length();
+
+    if (offset + len > SIZE)
+    {
+        trans.set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
+        return 0;
+    }
+
+    if (trans.get_command() == tlm::TLM_READ_COMMAND)
+        std::memcpy(ptr, mem + offset, len);
+    else if (trans.get_command() == tlm::TLM_WRITE_COMMAND)
+        std::memcpy(mem + offset, ptr, len);
+
+    trans.set_response_status(tlm::TLM_OK_RESPONSE);
+    return len;
 }
 
 // ─── Intel HEX loader ──────────────────────────────────────────────

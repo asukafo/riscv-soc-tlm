@@ -24,9 +24,14 @@ SRCS  = main.cpp \
 OBJS  = $(SRCS:%.cpp=$(BUILD_DIR)/%.o)
 TARGET = $(BUILD_DIR)/my_rv32
 
-.PHONY: all clean run test
+.PHONY: all clean run test asan
 
 all: $(TARGET)
+
+# AddressSanitizer build for memory-safety verification
+asan: CXXFLAGS += -fsanitize=address -fno-omit-frame-pointer
+asan: LDFLAGS += -fsanitize=address
+asan: clean all
 
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
@@ -58,3 +63,6 @@ ctest: $(TARGET)
 	$(MAKE) -C tests/c_programs
 	@echo "=== C Demo ==="
 	./$(TARGET) tests/c_programs/test_demo.elf && echo "PASS"
+	@echo ""
+	@echo "=== C DMA Test (AT Path) ==="
+	./$(TARGET) tests/c_programs/test_dma.elf && echo "PASS"

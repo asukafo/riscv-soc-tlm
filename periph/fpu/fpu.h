@@ -39,6 +39,9 @@ private:
 
     void b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay);
     void compute_thread();
+
+    // Debug transport — Clause 11.4
+    unsigned int transport_dbg(tlm::tlm_generic_payload& trans);
 };
 
 }  // namespace riscv_soc_tlm
